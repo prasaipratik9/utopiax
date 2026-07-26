@@ -1,0 +1,20 @@
+{
+  "name": "utopiax",
+  "private": true,
+  "version": "2.0.0",
+  "description": "UtopiaX Phase 2 — React/Vite frontend + Express/Supabase backend (Week 1: client only)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=client",
+    "dev:client": "npm run dev --workspace=client",
+    "build:client": "npm run build --workspace=client",
+    "preview:client": "npm run preview --workspace=client"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
