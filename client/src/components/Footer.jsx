@@ -15,7 +15,7 @@ export default function Footer() {
       setStatus("is-error");
       return;
     }
-    setMessage("Thanks! You're on the list (Week 1 stub — no email sent yet).");
+    setMessage("Thanks! You're on the list (Week 1 stub - no email sent yet).");
     setStatus("is-success");
     e.target.reset();
   };
@@ -24,6 +24,18 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="footer-inner">
         <div className="footer-brand">
+          <div className="footer-logo">
+            <img
+              src="/logos/utopiax.png"
+              alt=""
+              className="logo-img logo-img--footer"
+              width={36}
+              height={36}
+            />
+            <span>
+              Utopia<span style={{ color: "var(--ux-red)" }}>X</span>
+            </span>
+          </div>
           <p className="footer-tagline">{site.footerTagline}</p>
           <p className="footer-location">{site.footerLocation}</p>
         </div>
@@ -42,33 +54,33 @@ export default function Footer() {
               Join
             </button>
           </form>
-          {message && (
-            <p className={`form-message ${status}`}>{message}</p>
-          )}
+          {message && <p className={`form-message ${status}`}>{message}</p>}
         </div>
-        <div className="footer-social">
-          {social.map((s) => (
-            <a
-              key={s.href}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {s.label}
-            </a>
-          ))}
-        </div>
-        <div className="footer-contact">
-          <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
-          <a href={`mailto:${site.email}`}>{site.email}</a>
+        <div>
+          <div className="footer-social" style={{ marginBottom: "0.75rem" }}>
+            {social.map((s) => (
+              <a
+                key={s.href}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {s.label}
+              </a>
+            ))}
+          </div>
+          <div className="footer-contact">
+            <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+          </div>
         </div>
       </div>
       <div className="footer-bottom">
         <span>&copy; UtopiaX {new Date().getFullYear()}</span>
-        <a href="#privacy">Privacy Policy</a>
-        <Link to="/contact" className="footer-admin">
-          Contact
-        </Link>
+        <span style={{ display: "flex", gap: "18px" }}>
+          <a href="#privacy">Privacy Policy</a>
+          <Link to="/contact">Contact</Link>
+        </span>
       </div>
     </footer>
   );

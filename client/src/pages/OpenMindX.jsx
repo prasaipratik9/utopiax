@@ -1,33 +1,66 @@
+import { Link } from "react-router-dom";
 import { useSection } from "../context/ContentContext";
-import { PageHero, Section, SectionHeader, CtaButton } from "../components/Section";
-import Card from "../components/Card";
 
 export default function OpenMindX() {
   const page = useSection("openmindx");
 
   return (
-    <>
-      <PageHero eyebrow={page.eyebrow} title={page.title} lead={page.lead} />
-      <Section>
-        <div className="prose">
+    <div className="pillar-landing pillar-landing--openmindx">
+      <section className="pillar-hero">
+        <div className="pillar-hero__copy">
+          <span className="ux-kicker">{page.eyebrow}</span>
+          <h1>{page.title}</h1>
+          <p className="pillar-hero__lead">{page.lead}</p>
+          <div className="pillar-hero__actions">
+            <Link to="/contact" className="btn btn-primary">
+              Book a keynote
+            </Link>
+            <Link to="/xperiences" className="btn btn-outline">
+              View Xperiences
+            </Link>
+          </div>
+        </div>
+        <div className="pillar-hero__brand">
+          <img src="/logos/openmindx.png" alt="OpenMindX" />
+        </div>
+      </section>
+
+      <section className="pillar-body">
+        <div className="pillar-prose">
           <p>{page.body1}</p>
           <p>{page.body2}</p>
-          <blockquote className="blockquote">{page.quote}</blockquote>
         </div>
-      </Section>
-      <Section alt>
-        <SectionHeader title={page.keynotesTitle} />
-        <div className="card-grid">
-          {(page.keynotes || []).map((k) => (
-            <Card key={k.title} tag={k.tag} title={k.title}>
-              {k.desc}
-            </Card>
+        <blockquote className="pillar-quote">
+          <span aria-hidden="true">“</span>
+          <p>{page.quote}</p>
+        </blockquote>
+      </section>
+
+      <section className="pillar-list">
+        <header className="pillar-list__head">
+          <span className="ux-kicker">Featured</span>
+          <h2>{page.keynotesTitle}</h2>
+        </header>
+        <div className="pillar-grid">
+          {(page.keynotes || []).map((k, i) => (
+            <article className="pillar-card" key={k.title}>
+              <div className="pillar-card__meta">
+                <span className="ux-pill ux-pill--solid">
+                  {(k.tag || "").toUpperCase()}
+                </span>
+                <span className="pillar-card__num">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <h3>{k.title}</h3>
+              <p>{k.desc}</p>
+            </article>
           ))}
         </div>
-        <p style={{ marginTop: "2rem" }}>
-          <CtaButton to="/contact">Book a keynote</CtaButton>
-        </p>
-      </Section>
-    </>
+        <Link to="/contact" className="btn btn-primary">
+          Book a keynote
+        </Link>
+      </section>
+    </div>
   );
 }

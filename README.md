@@ -1,27 +1,23 @@
 # UtopiaX — Phase 2
 
-MERN-adjacent rebuild: **React + Vite** (client) → Vercel; **Node + Express + Supabase** (server) → Render (Week 2+).
+MERN-adjacent rebuild: **React + Vite** (client) → Vercel; **Node + Express** (server) → Render (Week 2+).
 
-## Week 1 complete (frontend)
+## Status
 
-- Monorepo with `client/` (React/Vite) and `legacy/` (Phase 1 static prototype)
-- All 8 public pages in React with dark hybrid UI kit theme
-- Content seeded from `content.json` via `ContentProvider` (swap to API in Week 2)
-- Universal Header / Footer via `Layout`
-- Contact form UI stubbed (Nodemailer in Week 3)
+- **Frontend:** All 8 public pages use the landing design system (`#FA3E32`, Bricolage / Public Sans)
+- **Backend:** Light Express scaffold (`/api/health`, `/api/content`) — auth/CMS later
 
 ## Quick start
 
 ```bash
 cd utopiax
 npm install
-npm run dev
+npm run dev              # client → http://localhost:5173
+npm run dev:server       # API → http://localhost:4000
 ```
 
-App: http://localhost:5173
-
 ```bash
-npm run build          # production build of client
+npm run build            # production build of client
 ```
 
 ## Routes
@@ -42,24 +38,15 @@ npm run build          # production build of client
 ```
 utopiax/
   client/     # React + Vite → Vercel
+  server/     # Express scaffold (Week 2 start)
   legacy/     # Phase 1 reference
-  server/     # Week 2
 ```
-
-## Vercel
-
-Root `vercel.json` builds the `client` workspace. Or set project root to `client/`.
 
 ## 4-week timeline
 
 | Week | Focus |
 |------|--------|
-| 1 | Frontend + Vercel (this week) |
-| 2 | Express + Supabase + JWT + CMS |
+| 1 | Frontend + Vercel |
+| 2 | Express + Supabase + JWT + CMS (scaffold started) |
 | 3 | Cloudinary + Nodemailer |
 | 4 | Stripe + QA + handover |
-
-## Design tokens
-
-Primary `#5811FB` · Secondary `#00F0FF` · Tertiary `#FF4D80` · Neutral `#0F172A`  
-Fonts: Space Grotesk + Inter

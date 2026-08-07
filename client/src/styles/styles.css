@@ -1,4 +1,4 @@
-/* UtopiaX — dark hybrid + UI kit accents (Phase 2 Week 1) */
+/* UtopiaX - dark hybrid + UI kit accents (Phase 2 Week 1) */
 :root {
   --primary: #5811fb;
   --primary-hover: #7c3aed;
@@ -333,7 +333,7 @@ body[data-public-site] > main {
   font-size: 1.1rem;
 }
 
-/* Buttons — UI kit */
+/* Buttons - UI kit */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -993,7 +993,7 @@ body[data-public-site] > main {
   }
 }
 
-/* —— Media page —— */
+/* -- Media page -- */
 .page-hero--media .lead {
   max-width: 52ch;
 }

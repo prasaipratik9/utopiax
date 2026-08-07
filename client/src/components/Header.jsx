@@ -23,7 +23,13 @@ export default function Header() {
     <header className="site-header">
       <div className="header-inner">
         <Link to="/" className="logo" aria-label="UtopiaX home" onClick={close}>
-          <span className="logo-mark">U</span>
+          <img
+            src="/logos/utopiax.png"
+            alt=""
+            className="logo-img"
+            width={40}
+            height={40}
+          />
           <span className="logo-text">
             Utopia<span className="logo-accent">X</span>
           </span>
@@ -59,6 +65,9 @@ export default function Header() {
             </NavLink>
           ))}
         </nav>
+        <Link to="/contact" className="btn btn-primary header-enquire" onClick={close}>
+          Enquire
+        </Link>
       </div>
     </header>
   );

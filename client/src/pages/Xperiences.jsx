@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useContent, useSection } from "../context/ContentContext";
-import { PageHero, Section } from "../components/Section";
-import Card from "../components/Card";
-import Pagination from "../components/Pagination";
 
 const PER_PAGE = 6;
 
@@ -19,31 +17,64 @@ export default function Xperiences() {
   }, [items, pageNum]);
 
   return (
-    <>
-      <PageHero eyebrow={page.eyebrow} title={page.title} lead={page.lead} />
-      <Section>
-        <div className="card-grid">
-          {slice.map((x) => (
-            <Card
-              key={x.title}
-              tag={x.tag}
-              title={x.title}
-              location={x.location}
-              status={x.status}
-              to="/contact"
-              linkLabel="Enquire"
-            >
-              {x.desc}
-            </Card>
+    <div className="pillar-landing pillar-landing--xperiences">
+      <section className="pillar-hero pillar-hero--simple">
+        <div className="pillar-hero__copy">
+          <span className="ux-kicker">{page.eyebrow}</span>
+          <h1>{page.title}</h1>
+          <p className="pillar-hero__lead">{page.lead}</p>
+        </div>
+      </section>
+
+      <section className="pillar-list">
+        <div className="pillar-grid">
+          {slice.map((x, i) => (
+            <article className="pillar-card" key={x.title}>
+              <div className="pillar-card__meta">
+                <span className="ux-pill ux-pill--solid">
+                  {(x.tag || "").toUpperCase()}
+                </span>
+                <span className="pillar-card__num">
+                  {String((pageNum - 1) * PER_PAGE + i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <h3>{x.title}</h3>
+              <p className="pillar-card__loc">
+                {x.location}
+                {x.status ? ` · ${x.status}` : ""}
+              </p>
+              <p>{x.desc}</p>
+              <Link to="/contact" className="ux-arrow">
+                Enquire <span>→</span>
+              </Link>
+            </article>
           ))}
         </div>
-        <Pagination
-          page={pageNum}
-          totalPages={totalPages}
-          onPrev={() => setPageNum((p) => Math.max(1, p - 1))}
-          onNext={() => setPageNum((p) => Math.min(totalPages, p + 1))}
-        />
-      </Section>
-    </>
+
+        {totalPages > 1 && (
+          <div className="pillar-pagination">
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={pageNum === 1}
+              onClick={() => setPageNum((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <span>
+              Page {pageNum} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={pageNum === totalPages}
+              onClick={() => setPageNum((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
