@@ -7,6 +7,14 @@ import { fileURLToPath } from "node:url";
 import { authMode, verifyAdmin } from "./auth.js";
 import { contentStoreMode, getContent, saveContent } from "./contentStore.js";
 import { isDbConfigured } from "./db.js";
+import { requireAuth } from "./middleware/requireAuth.js";
+import analyticsRouter from "./routes/analytics.js";
+import enquiriesRouter from "./routes/enquiries.js";
+import mediaRouter from "./routes/media.js";
+import newsletterRouter from "./routes/newsletter.js";
+import productsRouter from "./routes/products.js";
+import servicesRouter from "./routes/services.js";
+import usersRouter from "./routes/users.js";
 
 dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".env") });
 dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.env") });
@@ -21,24 +29,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 
-function signToken(username) {
-  return jwt.sign({ sub: username, role: "admin" }, JWT_SECRET, {
+function signToken(username, role = "admin") {
+  return jwt.sign({ sub: username, role }, JWT_SECRET, {
     expiresIn: `${SESSION_HOURS}h`,
   });
-}
-
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) {
-    return res.status(401).json({ error: "Missing auth token" });
-  }
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    return next();
-  } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
 }
 
 app.get("/api/health", (_req, res) => {
@@ -49,7 +43,19 @@ app.get("/api/health", (_req, res) => {
     db: contentStoreMode(),
     auth: authMode(),
     supabaseConfigured: isDbConfigured(),
-    features: ["jwt-auth", "content-read", "content-write", "supabase-optional"],
+    features: [
+      "jwt-auth",
+      "content-read",
+      "content-write",
+      "supabase-optional",
+      "services",
+      "products",
+      "media",
+      "enquiries",
+      "newsletter",
+      "analytics",
+      "users",
+    ],
   });
 });
 
@@ -63,10 +69,11 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    const token = signToken(admin.username);
+    const role = admin.role || "admin";
+    const token = signToken(admin.username, role);
     return res.json({
       token,
-      user: { username: admin.username, role: "admin" },
+      user: { username: admin.username, role },
       expiresInHours: SESSION_HOURS,
       authMode: authMode(),
     });
@@ -119,6 +126,15 @@ app.put("/api/content", requireAuth, async (req, res) => {
     res.status(500).json({ error: err.message || "Could not save content" });
   }
 });
+
+// Relational resources (require Supabase — see schema-core.sql)
+app.use("/api/services", servicesRouter);
+app.use("/api/products", productsRouter);
+app.use("/api/media", mediaRouter);
+app.use("/api/enquiries", enquiriesRouter);
+app.use("/api/newsletter", newsletterRouter);
+app.use("/api/analytics", analyticsRouter);
+app.use("/api/users", usersRouter);
 
 app.listen(PORT, () => {
   console.log(`UtopiaX API on http://localhost:${PORT}`);
