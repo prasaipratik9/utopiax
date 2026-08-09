@@ -3150,5 +3150,173 @@ a:hover {
   }
 }
 
+/* —— Admin CMS (Week 2) —— */
+.admin-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background:
+    radial-gradient(
+      700px 400px at 10% 0%,
+      color-mix(in srgb, var(--ux-red) 12%, transparent),
+      transparent 60%
+    ),
+    #f0eee9;
+}
+
+.admin-shell--wide {
+  display: block;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.admin-loading {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 15px;
+}
+
+.admin-login {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 36px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.25);
+}
+
+.admin-login h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.admin-login__hint {
+  margin: 0 0 8px;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-login label,
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.admin-login input,
+.admin-field input,
+.admin-field textarea {
+  padding: 12px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ux-text);
+  background: #fff;
+}
+
+.admin-login input:focus,
+.admin-field input:focus,
+.admin-field textarea:focus {
+  outline: none;
+  border-color: var(--ux-red);
+}
+
+.admin-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.admin-top h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 800;
+}
+
+.admin-top__meta {
+  margin: 8px 0 0;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 14px;
+}
+
+.admin-top__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-tabs button {
+  padding: 10px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.6);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-tabs button.is-active {
+  border-color: var(--ux-red);
+  background: var(--ux-red);
+  color: #fff;
+}
+
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.admin-msg {
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.admin-msg.is-success {
+  color: #1a7a3c;
+}
+
+.admin-msg.is-error {
+  color: var(--ux-red);
+}
+
+@media (max-width: 700px) {
+  .admin-top {
+    flex-direction: column;
+  }
+}
+
 
 
