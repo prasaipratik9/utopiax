@@ -14,6 +14,7 @@ import mediaRouter from "./routes/media.js";
 import newsletterRouter from "./routes/newsletter.js";
 import productsRouter from "./routes/products.js";
 import servicesRouter from "./routes/services.js";
+import uploadsRouter from "./routes/uploads.js";
 import usersRouter from "./routes/users.js";
 
 dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".env") });
@@ -135,6 +136,7 @@ app.use("/api/enquiries", enquiriesRouter);
 app.use("/api/newsletter", newsletterRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/uploads", uploadsRouter);
 
 app.listen(PORT, () => {
   console.log(`UtopiaX API on http://localhost:${PORT}`);

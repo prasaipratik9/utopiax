@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload";
 
 const EMPTY = {
   title: "",
@@ -63,6 +64,8 @@ export default function AdminProducts() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const load = async () => {
     const data = await api("/api/products", token);
@@ -103,6 +106,25 @@ export default function AdminProducts() {
 
   const patch = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const onUploadImage = async () => {
+    if (!imageFile) {
+      setError("Choose an image first");
+      return;
+    }
+    setUploading(true);
+    setStatus("");
+    setError("");
+    try {
+      const url = await uploadToCloudinary(imageFile, token);
+      patch("image_url", url);
+      setStatus("Image uploaded");
+    } catch (err) {
+      setError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onSave = async (e) => {
@@ -229,6 +251,24 @@ export default function AdminProducts() {
             value={form.image_url}
             onChange={(e) => patch("image_url", e.target.value)}
           />
+          <label className="admin-field">
+            <span>Upload image</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+          </label>
+          <div className="admin-top__actions">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={onUploadImage}
+              disabled={uploading}
+            >
+              {uploading ? "Uploading…" : "Upload"}
+            </button>
+          </div>
           <Field
             label="Published"
             type="checkbox"
