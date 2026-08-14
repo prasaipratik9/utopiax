@@ -104,6 +104,15 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="admin-top__actions">
+          <Link to="/admin/services" className="btn btn-outline">
+            Services
+          </Link>
+          <Link to="/admin/products" className="btn btn-outline">
+            Products
+          </Link>
+          <Link to="/admin/media" className="btn btn-outline">
+            Media
+          </Link>
           <Link to="/" className="btn btn-outline">
             View site
           </Link>

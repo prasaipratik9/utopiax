@@ -12,6 +12,9 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminServices from "./pages/AdminServices";
+import AdminProducts from "./pages/AdminProducts";
+import AdminMedia from "./pages/AdminMedia";
 
 export default function App() {
   return (
@@ -31,6 +34,9 @@ export default function App() {
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/services" element={<AdminServices />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/media" element={<AdminMedia />} />
           </Routes>
         </BrowserRouter>
       </ContentProvider>
