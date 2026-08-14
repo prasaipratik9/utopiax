@@ -9,6 +9,7 @@
 */
 
 import { Router } from "express";
+import { sendEnquiryNotification } from "../mailer.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { requireDb } from "../middleware/requireDb.js";
 
@@ -49,7 +50,26 @@ router.post("/", async (req, res) => {
 
     if (error) throw error;
 
-    // TODO(Week 3): send enquiry notification via Nodemailer, then flip emailed=true
+    try {
+      const sent = await sendEnquiryNotification(data);
+      if (sent) {
+        const { data: updated, error: updateError } = await req.supabase
+          .from("enquiries")
+          .update({ emailed: true })
+          .eq("id", data.id)
+          .select("*")
+          .maybeSingle();
+
+        if (updateError) {
+          console.error("Could not mark enquiry emailed:", updateError.message);
+        } else if (updated) {
+          res.status(201).json(updated);
+          return;
+        }
+      }
+    } catch (mailErr) {
+      console.error("Enquiry email failed:", mailErr);
+    }
 
     res.status(201).json(data);
   } catch (err) {

@@ -11,8 +11,7 @@ const INTERESTS = [
 ];
 
 /**
- * Week 1: UI-only contact form (stubbed submit).
- * Week 3: wire to Nodemailer API endpoint.
+ * Contact form POSTs to /api/enquiries; the API emails via Nodemailer when SMTP is set.
  */
 export default function Contact() {
   const { site, social } = useContent();
@@ -20,6 +19,7 @@ export default function Contact() {
   const [locked, setLocked] = useState(false);
   const [message, setMessage] = useState(null);
   const [status, setStatus] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (locked) return undefined;
@@ -36,8 +36,10 @@ export default function Contact() {
     setLocked(true);
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
     const data = new FormData(e.target);
     const name = String(data.get("name") || "").trim();
     const email = String(data.get("email") || "").trim();
@@ -54,11 +56,33 @@ export default function Contact() {
       return;
     }
 
-    setMessage(
-      `Thanks, ${name}. Your enquiry is recorded locally for now - email delivery arrives in Week 3.`,
-    );
-    setStatus("is-success");
-    e.target.reset();
+    setSubmitting(true);
+    setMessage(null);
+    setStatus("");
+    try {
+      const res = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          message: body,
+          interest: active.label,
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(payload.error || "Could not send enquiry");
+      }
+      setMessage(`Thanks, ${name}. We have received your enquiry and will be in touch.`);
+      setStatus("is-success");
+      e.target.reset();
+    } catch (err) {
+      setMessage(err.message || "Could not send enquiry. Please try again.");
+      setStatus("is-error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const socialLinks = (social || []).filter((s) =>
