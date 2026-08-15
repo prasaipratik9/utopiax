@@ -609,7 +609,7 @@ a:hover {
   aspect-ratio: 16 / 10;
   display: grid;
   place-items: center;
-  background: #0a0a0a;
+  background: #e8e4dc;
   overflow: hidden;
 }
 
@@ -620,10 +620,10 @@ a:hover {
   background:
     radial-gradient(
       120% 80% at 50% 120%,
-      color-mix(in srgb, var(--pillar-accent, var(--ux-red)) 28%, transparent),
+      color-mix(in srgb, var(--pillar-accent, var(--ux-red)) 16%, transparent),
       transparent 55%
     );
-  opacity: 0.55;
+  opacity: 0.7;
   transition: opacity 0.8s ease, transform 0.85s ease;
 }
 
@@ -928,7 +928,14 @@ a:hover {
   flex-wrap: wrap;
   gap: 36px;
   align-items: center;
-  opacity: 0.85;
+  opacity: 0.95;
+}
+
+.ux-logos__img {
+  height: 56px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
 }
 
 .ux-logos__row .ux-img-slot {

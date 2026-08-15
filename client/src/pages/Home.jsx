@@ -223,13 +223,17 @@ export default function Home() {
           <p className="ux-kicker">Trusted by</p>
           <div className="ux-logos__row">
             {[
-              "Deloitte logo",
-              "BUPA logo",
-              "George Weston Foods logo",
-              "Government agency logo",
-              "University logo",
-            ].map((label) => (
-              <ImageSlot key={label} label={label} />
+              { src: "/logos/csiro.png", alt: "CSIRO" },
+              { src: "/logos/uts.png", alt: "University of Technology Sydney" },
+              { src: "/logos/utopia.png", alt: "utopia" },
+              { src: "/logos/bupa.png", alt: "Bupa" },
+            ].map((logo) => (
+              <img
+                key={logo.alt}
+                src={logo.src}
+                alt={logo.alt}
+                className="ux-logos__img"
+              />
             ))}
           </div>
         </div>
