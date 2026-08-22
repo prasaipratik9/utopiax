@@ -60,6 +60,7 @@ Without Supabase: CMS uses `content.json`; relational routes return **503**.
 
 1. Run [`schema.sql`](./schema.sql) (CMS + initial admins table) if not already applied.
 2. Run [`schema-core.sql`](./schema-core.sql) (renames `admins` → `users`, adds role + catalogs / enquiries / newsletter / analytics). Safe to re-run; preserves existing admin rows.
+3. Run media content migration [`src/db/migrations/002_media_content.sql`](./src/db/migrations/002_media_content.sql) in the SQL editor (or `npm run migrate` with `DATABASE_URL` + `pg`).
 3. Copy [`.env.example`](./.env.example) → `server/.env` with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 4. Restart API. Health should show `"db": "supabase"`.
 

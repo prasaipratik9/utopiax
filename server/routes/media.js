@@ -2,24 +2,92 @@
   curl examples (after login → TOKEN=...):
 
   curl -s http://localhost:4000/api/media
+  curl -s http://localhost:4000/api/media/my-article-slug
   curl -s -X POST http://localhost:4000/api/media \
     -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-    -d '{"title":"Talk","type":"video","url":"https://example.com/v","thumbnail_url":"https://res.cloudinary.com/.../thumb.jpg"}'
-  curl -s -X PUT http://localhost:4000/api/media/<id> \
-    -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-    -d '{"is_published":true}'
-  curl -s -X DELETE http://localhost:4000/api/media/<id> \
-    -H "Authorization: Bearer $TOKEN"
+    -d '{"title":"Talk","type":"article","category":"openmindx","slug":"talk","excerpt":"…","content":"<p>…</p>"}'
 */
 
 import { Router } from "express";
 import { optionalAuth, requireAuth } from "../middleware/requireAuth.js";
 import { requireDb } from "../middleware/requireDb.js";
 
-const TYPES = new Set(["video", "article", "podcast", "press"]);
+const TYPES = new Set(["image", "video", "document", "article"]);
+const CATEGORIES = new Set(["openmindx", "ideationworx", "lumierex"]);
 const router = Router();
 
 router.use(requireDb);
+
+export function slugify(title) {
+  return String(title || "")
+    .toLowerCase()
+    .trim()
+    .replace(/['']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "item";
+}
+
+async function uniqueSlug(supabase, base, excludeId = null) {
+  let candidate = base;
+  let n = 2;
+  for (;;) {
+    let query = supabase
+      .from("media")
+      .select("id", { count: "exact", head: true })
+      .eq("slug", candidate);
+    if (excludeId) query = query.neq("id", excludeId);
+    const { count, error } = await query;
+    if (error) throw error;
+    if (!count) return candidate;
+    candidate = `${base}-${n}`;
+    n += 1;
+  }
+}
+
+function parseMediaBody(body, { partial = false } = {}) {
+  const out = {};
+
+  if (!partial || body.title !== undefined) {
+    const title = String(body?.title || "").trim();
+    if (!title && !partial) throw Object.assign(new Error("title is required"), { status: 400 });
+    if (body.title !== undefined) out.title = title;
+  }
+
+  if (!partial || body.type !== undefined) {
+    const type = String(body?.type || "").trim();
+    if (!TYPES.has(type)) {
+      throw Object.assign(
+        new Error("type must be one of: image, video, document, article"),
+        { status: 400 },
+      );
+    }
+    out.type = type;
+  }
+
+  if (body.category !== undefined) {
+    const category = body.category ? String(body.category).trim() : null;
+    if (category && !CATEGORIES.has(category)) {
+      throw Object.assign(
+        new Error("category must be one of: openmindx, ideationworx, lumierex"),
+        { status: 400 },
+      );
+    }
+    out.category = category;
+  }
+
+  if (body.content !== undefined) out.content = body.content ?? null;
+  if (body.excerpt !== undefined) out.excerpt = body.excerpt ?? null;
+  if (body.url !== undefined) out.url = body.url ?? null;
+  if (body.thumbnail_url !== undefined) out.thumbnail_url = body.thumbnail_url ?? null;
+  if (body.published_at !== undefined) out.published_at = body.published_at ?? null;
+  if (body.is_published !== undefined) out.is_published = Boolean(body.is_published);
+  if (body.slug !== undefined) {
+    out.slug = body.slug ? slugify(body.slug) : null;
+  }
+
+  return out;
+}
 
 router.get("/", optionalAuth, async (req, res) => {
   try {
@@ -42,25 +110,34 @@ router.get("/", optionalAuth, async (req, res) => {
   }
 });
 
+router.get("/:slug", async (req, res) => {
+  try {
+    const slug = String(req.params.slug || "").trim();
+    if (!slug) return res.status(400).json({ error: "slug is required" });
+
+    const { data, error } = await req.supabase
+      .from("media")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_published", true)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Media item not found" });
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Could not load media item" });
+  }
+});
+
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const title = String(req.body?.title || "").trim();
-    const type = String(req.body?.type || "").trim();
-    if (!title) return res.status(400).json({ error: "title is required" });
-    if (!TYPES.has(type)) {
-      return res.status(400).json({
-        error: "type must be one of: video, article, podcast, press",
-      });
-    }
+    const row = parseMediaBody(req.body || {}, { partial: false });
+    if (row.is_published === undefined) row.is_published = true;
 
-    const row = {
-      title,
-      type,
-      url: req.body?.url ?? null,
-      thumbnail_url: req.body?.thumbnail_url ?? null,
-      published_at: req.body?.published_at ?? null,
-      is_published: req.body?.is_published !== false,
-    };
+    const baseSlug = row.slug || slugify(row.title);
+    row.slug = await uniqueSlug(req.supabase, baseSlug);
 
     const { data, error } = await req.supabase
       .from("media")
@@ -72,31 +149,19 @@ router.post("/", requireAuth, async (req, res) => {
     res.status(201).json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || "Could not create media item" });
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message || "Could not create media item" });
   }
 });
 
 router.put("/:id", requireAuth, async (req, res) => {
   try {
-    const patch = {};
+    const patch = parseMediaBody(req.body || {}, { partial: true });
 
-    if (req.body?.title !== undefined) patch.title = String(req.body.title).trim();
-    if (req.body?.type !== undefined) {
-      const type = String(req.body.type).trim();
-      if (!TYPES.has(type)) {
-        return res.status(400).json({
-          error: "type must be one of: video, article, podcast, press",
-        });
-      }
-      patch.type = type;
-    }
-    if (req.body?.url !== undefined) patch.url = req.body.url;
-    if (req.body?.thumbnail_url !== undefined) {
-      patch.thumbnail_url = req.body.thumbnail_url;
-    }
-    if (req.body?.published_at !== undefined) patch.published_at = req.body.published_at;
-    if (req.body?.is_published !== undefined) {
-      patch.is_published = Boolean(req.body.is_published);
+    if (patch.slug) {
+      patch.slug = await uniqueSlug(req.supabase, patch.slug, req.params.id);
+    } else if (patch.title && req.body?.slug === undefined) {
+      // keep existing slug unless explicitly sent
     }
 
     const { data, error } = await req.supabase
@@ -111,7 +176,8 @@ router.put("/:id", requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || "Could not update media item" });
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message || "Could not update media item" });
   }
 });
 

@@ -8,6 +8,7 @@ import IdeationWorX from "./pages/IdeationWorX";
 import LumiereX from "./pages/LumiereX";
 import Xperiences from "./pages/Xperiences";
 import Media from "./pages/Media";
+import MediaDetail from "./pages/MediaDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import AdminLogin from "./pages/AdminLogin";
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/lumierex" element={<LumiereX />} />
               <Route path="/xperiences" element={<Xperiences />} />
               <Route path="/media" element={<Media />} />
+              <Route path="/media/:slug" element={<MediaDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
             </Route>

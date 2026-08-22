@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useContent, useSection } from "../context/ContentContext";
 
 function ImageSlot({ label, className = "" }) {
@@ -67,10 +68,11 @@ const externalPodcasts = [
   },
 ];
 
-/** Blog / article cards - images to be added next */
+/** Fallback journal cards when the API has no published articles yet */
 const blogArticles = [
   {
     id: "family-legacy",
+    slug: "family-legacy",
     title: "A Family Legacy of Failure and Success",
     date: "13 May 24",
     category: "Innovation",
@@ -81,6 +83,7 @@ const blogArticles = [
   },
   {
     id: "nobody-knows",
+    slug: "nobody-knows-anything",
     title: "Nobody Knows Anything",
     date: "12 May 24",
     category: "Innovation",
@@ -91,6 +94,7 @@ const blogArticles = [
   },
   {
     id: "vision-values",
+    slug: "vision-and-values",
     title: "Vision and Values are More Than Rhetoric",
     date: "8 May 24",
     category: "Innovation",
@@ -101,14 +105,61 @@ const blogArticles = [
   },
 ];
 
-/** Layout variants for the visual bento (featured + image cards) */
 const LAYOUTS = ["featured", "thumb", "thumb", "audio-accent"];
+
+const CATEGORY_LABELS = {
+  openmindx: "OpenMindX",
+  ideationworx: "IdeationWorX",
+  lumierex: "LumiereX",
+};
+
+function mapApiItem(row) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    type: row.type === "document" ? "article" : row.type,
+    date: row.published_at
+      ? new Date(row.published_at).toLocaleDateString("en-AU", {
+          day: "numeric",
+          month: "short",
+          year: "2-digit",
+        })
+      : "",
+    category: CATEGORY_LABELS[row.category] || row.category || row.type,
+    excerpt: row.excerpt || "",
+    cover: row.thumbnail_url || null,
+  };
+}
 
 export default function Media() {
   const page = useSection("media");
   const { content } = useContent();
-  const items = content.mediaItems || [];
+  const seedItems = content.mediaItems || [];
   const [filter, setFilter] = useState("all");
+  const [apiItems, setApiItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/media");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setApiItems((data.items || []).map(mapApiItem));
+      } catch {
+        /* keep seed content if API unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const items = useMemo(() => {
+    if (apiItems.length) return apiItems;
+    return seedItems;
+  }, [apiItems, seedItems]);
 
   const filtered = useMemo(() => {
     const all = [...items];
@@ -128,6 +179,11 @@ export default function Media() {
           filtered.find((m) => m.type === "audio" && !m.cover) || filtered[2],
         ].filter(Boolean)
       : filtered.filter((m) => m.type !== "article");
+
+  const journalArticles = useMemo(() => {
+    const fromApi = apiItems.filter((m) => m.type === "article" && m.slug);
+    return fromApi.length ? fromApi : blogArticles;
+  }, [apiItems]);
 
   const showArticles = filter === "all" || filter === "article";
 
@@ -176,48 +232,57 @@ export default function Media() {
               <h2>Words on failure, purpose &amp; possibility</h2>
             </header>
 
-            {blogArticles[0] && (
-              <article className="media-feature">
+            {journalArticles[0] && (
+              <Link
+                to={journalArticles[0].slug ? `/media/${journalArticles[0].slug}` : "/media"}
+                className="media-feature"
+                style={{ textDecoration: "none", color: "inherit", display: "grid" }}
+              >
                 <figure className="media-feature__media">
-                  {blogArticles[0].cover ? (
+                  {journalArticles[0].cover ? (
                     <img
-                      src={blogArticles[0].cover}
+                      src={journalArticles[0].cover}
                       alt=""
                       className="media-feature__photo"
                     />
                   ) : (
-                    <ImageSlot label={blogArticles[0].placeholder} />
+                    <ImageSlot label={journalArticles[0].placeholder || journalArticles[0].title} />
                   )}
                   <span className="media-feature__index">01</span>
                 </figure>
                 <div className="media-feature__body">
                   <p className="media-journal__meta">
-                    {blogArticles[0].date.toUpperCase()}
+                    {(journalArticles[0].date || "").toUpperCase()}
                     <span />
-                    {blogArticles[0].category.toUpperCase()}
+                    {(journalArticles[0].category || "").toUpperCase()}
                   </p>
-                  <h3>{blogArticles[0].title}</h3>
+                  <h3>{journalArticles[0].title}</h3>
                   <p className="media-feature__excerpt">
-                    {blogArticles[0].excerpt}
+                    {journalArticles[0].excerpt}
                   </p>
                   <span className="media-journal__more">
                     Read more <span aria-hidden="true">→</span>
                   </span>
                 </div>
-              </article>
+              </Link>
             )}
 
             <div className="media-journal__rows">
-              {blogArticles.slice(1).map((article, i) => (
-                <article className="media-row" key={article.id}>
+              {journalArticles.slice(1).map((article, i) => (
+                <Link
+                  className="media-row"
+                  key={article.id || article.slug || article.title}
+                  to={article.slug ? `/media/${article.slug}` : "/media"}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <span className="media-row__index">
                     {String(i + 2).padStart(2, "0")}
                   </span>
                   <div className="media-row__body">
                     <p className="media-journal__meta">
-                      {article.date.toUpperCase()}
+                      {(article.date || "").toUpperCase()}
                       <span />
-                      {article.category.toUpperCase()}
+                      {(article.category || "").toUpperCase()}
                     </p>
                     <h3>{article.title}</h3>
                     <p className="media-row__excerpt">{article.excerpt}</p>
@@ -233,10 +298,10 @@ export default function Media() {
                         className="media-row__photo"
                       />
                     ) : (
-                      <ImageSlot label={article.placeholder} />
+                      <ImageSlot label={article.placeholder || article.title} />
                     )}
                   </figure>
-                </article>
+                </Link>
               ))}
             </div>
           </div>
@@ -269,9 +334,15 @@ export default function Media() {
 }
 
 function MediaCard({ item, layout }) {
+  const href = item.slug ? `/media/${item.slug}` : null;
+  const Wrapper = href ? Link : "article";
+  const wrapperProps = href
+    ? { to: href, className: undefined, style: { textDecoration: "none", color: "inherit" } }
+    : {};
+
   if (item.cover && (layout === "thumb" || layout === "wide-excerpt" || layout === "audio")) {
     return (
-      <article className="media-card media-card--thumb">
+      <Wrapper {...wrapperProps} className="media-card media-card--thumb">
         <figure>
           <img src={item.cover} alt="" className="media-card__thumb-img" />
         </figure>
@@ -283,13 +354,13 @@ function MediaCard({ item, layout }) {
           <span className="media-card__play media-card__play--sm">▶</span>
         </div>
         <h3>{item.title}</h3>
-      </article>
+      </Wrapper>
     );
   }
 
   if (layout === "featured") {
     return (
-      <article className="media-card media-card--featured">
+      <Wrapper {...wrapperProps} className="media-card media-card--featured">
         <img
           src="/images/hero-keynote.png"
           alt=""
@@ -306,13 +377,14 @@ function MediaCard({ item, layout }) {
             <p>{item.excerpt}</p>
           </div>
         </div>
-      </article>
+      </Wrapper>
     );
   }
 
   if (layout === "audio" || layout === "audio-accent") {
     return (
-      <article
+      <Wrapper
+        {...wrapperProps}
         className={`media-card media-card--${layout === "audio-accent" ? "audio-accent" : "audio"}`}
       >
         <div className="media-card__meta">
@@ -325,13 +397,13 @@ function MediaCard({ item, layout }) {
         <h3>
           {item.title.replace(" - Podcast", "").replace(" - Fireside Chat", "")}
         </h3>
-      </article>
+      </Wrapper>
     );
   }
 
   if (layout === "thumb") {
     return (
-      <article className="media-card media-card--thumb">
+      <Wrapper {...wrapperProps} className="media-card media-card--thumb">
         <figure>
           {item.cover ? (
             <img src={item.cover} alt="" className="media-card__thumb-img" />
@@ -344,12 +416,12 @@ function MediaCard({ item, layout }) {
           <span className="media-card__play media-card__play--sm">▶</span>
         </div>
         <h3>{item.title}</h3>
-      </article>
+      </Wrapper>
     );
   }
 
   return (
-    <article className="media-card media-card--wide">
+    <Wrapper {...wrapperProps} className="media-card media-card--wide">
       <div className="media-card__meta">
         <span>
           {item.date} · {item.category}
@@ -358,6 +430,6 @@ function MediaCard({ item, layout }) {
       </div>
       <h3>{item.title}</h3>
       {item.excerpt ? <p>{item.excerpt}</p> : null}
-    </article>
+    </Wrapper>
   );
 }

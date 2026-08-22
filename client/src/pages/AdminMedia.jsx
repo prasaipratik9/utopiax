@@ -3,16 +3,58 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload";
 
-const TYPES = ["video", "article", "podcast", "press"];
+const CREATE_TYPES = [
+  { id: "article", label: "Article" },
+  { id: "video", label: "Video" },
+  { id: "document", label: "Document" },
+];
 
-const EMPTY = {
-  title: "",
-  type: "video",
-  url: "",
-  thumbnail_url: "",
-  published_at: "",
-  is_published: true,
+const CATEGORIES = [
+  { value: "openmindx", label: "OpenMindX" },
+  { value: "ideationworx", label: "IdeationWorX" },
+  { value: "lumierex", label: "LumiereX" },
+];
+
+const EMPTY_BY_TYPE = {
+  article: {
+    title: "",
+    type: "article",
+    category: "openmindx",
+    excerpt: "",
+    content: "",
+    thumbnail_url: "",
+    slug: "",
+    is_published: true,
+  },
+  video: {
+    title: "",
+    type: "video",
+    category: "openmindx",
+    url: "",
+    thumbnail_url: "",
+    slug: "",
+    is_published: true,
+  },
+  document: {
+    title: "",
+    type: "document",
+    category: "openmindx",
+    url: "",
+    thumbnail_url: "",
+    slug: "",
+    is_published: true,
+  },
 };
+
+function slugify(title) {
+  return String(title || "")
+    .toLowerCase()
+    .trim()
+    .replace(/['']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
 
 function Field({ label, value, onChange, multiline = false, type = "text", options }) {
   return (
@@ -21,13 +63,13 @@ function Field({ label, value, onChange, multiline = false, type = "text", optio
       {options ? (
         <select value={value || ""} onChange={onChange}>
           {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
+            <option key={opt.value || opt} value={opt.value || opt}>
+              {opt.label || opt}
             </option>
           ))}
         </select>
       ) : multiline ? (
-        <textarea rows={4} value={value || ""} onChange={onChange} />
+        <textarea rows={type === "content" ? 10 : 4} value={value || ""} onChange={onChange} />
       ) : type === "checkbox" ? (
         <input type="checkbox" checked={Boolean(value)} onChange={onChange} />
       ) : (
@@ -63,11 +105,14 @@ export default function AdminMedia() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [pickingType, setPickingType] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [docFile, setDocFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(false);
 
   const load = async () => {
     const data = await api("/api/media", token);
@@ -107,7 +152,24 @@ export default function AdminMedia() {
   }
 
   const patch = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "title" && !slugTouched && !editingId) {
+        next.slug = slugify(value);
+      }
+      return next;
+    });
+  };
+
+  const startCreate = (type) => {
+    setEditingId(null);
+    setSlugTouched(false);
+    setImageFile(null);
+    setDocFile(null);
+    setForm({ ...EMPTY_BY_TYPE[type] });
+    setPickingType(false);
+    setStatus("");
+    setError("");
   };
 
   const onUploadThumbnail = async () => {
@@ -121,7 +183,26 @@ export default function AdminMedia() {
     try {
       const url = await uploadToCloudinary(imageFile, token);
       patch("thumbnail_url", url);
-      setStatus("Thumbnail uploaded");
+      setStatus("Image uploaded");
+    } catch (err) {
+      setError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onUploadDocument = async () => {
+    if (!docFile) {
+      setError("Choose a file first");
+      return;
+    }
+    setUploading(true);
+    setStatus("");
+    setError("");
+    try {
+      const url = await uploadToCloudinary(docFile, token);
+      patch("url", url);
+      setStatus("File uploaded");
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
@@ -138,11 +219,24 @@ export default function AdminMedia() {
       const payload = {
         title: form.title,
         type: form.type,
-        url: form.url || null,
+        category: form.category || null,
+        slug: form.slug || slugify(form.title),
         thumbnail_url: form.thumbnail_url || null,
-        published_at: form.published_at || null,
         is_published: Boolean(form.is_published),
+        published_at: form.published_at || null,
       };
+
+      if (form.type === "article") {
+        payload.excerpt = form.excerpt || null;
+        payload.content = form.content || null;
+      }
+      if (form.type === "video" || form.type === "document") {
+        payload.url = form.url || null;
+      }
+      if (form.type === "image") {
+        payload.url = form.url || form.thumbnail_url || null;
+      }
+
       if (editingId) {
         await api(`/api/media/${editingId}`, token, {
           method: "PUT",
@@ -158,6 +252,7 @@ export default function AdminMedia() {
       }
       setForm(null);
       setEditingId(null);
+      setPickingType(false);
       await load();
     } catch (err) {
       setError(err.message || "Save failed");
@@ -220,41 +315,127 @@ export default function AdminMedia() {
           type="button"
           className="btn btn-primary"
           onClick={() => {
+            setForm(null);
             setEditingId(null);
-            setForm({ ...EMPTY });
+            setPickingType(true);
             setStatus("");
             setError("");
           }}
         >
-          Add new
+          Add New
         </button>
       </p>
 
+      {pickingType && !form ? (
+        <div className="admin-panel">
+          <p className="admin-top__meta">Choose a content type</p>
+          <div className="admin-top__actions">
+            {CREATE_TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className="btn btn-outline"
+                onClick={() => startCreate(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setPickingType(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {form ? (
         <form className="admin-panel" onSubmit={onSave}>
+          <p className="admin-top__meta">
+            Template: <strong>{form.type}</strong>
+          </p>
           <Field
             label="Title"
             value={form.title}
             onChange={(e) => patch("title", e.target.value)}
           />
           <Field
-            label="Type"
-            value={form.type}
-            options={TYPES}
-            onChange={(e) => patch("type", e.target.value)}
+            label="Category"
+            value={form.category}
+            options={CATEGORIES}
+            onChange={(e) => patch("category", e.target.value)}
           />
           <Field
-            label="URL"
-            value={form.url}
-            onChange={(e) => patch("url", e.target.value)}
+            label="Slug"
+            value={form.slug}
+            onChange={(e) => {
+              setSlugTouched(true);
+              patch("slug", slugify(e.target.value));
+            }}
           />
+
+          {form.type === "article" ? (
+            <>
+              <Field
+                label="Excerpt"
+                multiline
+                value={form.excerpt}
+                onChange={(e) => patch("excerpt", e.target.value)}
+              />
+              <Field
+                label="Content (HTML for now — rich text editor optional)"
+                multiline
+                type="content"
+                value={form.content}
+                onChange={(e) => patch("content", e.target.value)}
+              />
+            </>
+          ) : null}
+
+          {form.type === "video" ? (
+            <Field
+              label="Video URL"
+              value={form.url}
+              onChange={(e) => patch("url", e.target.value)}
+            />
+          ) : null}
+
+          {form.type === "document" ? (
+            <>
+              <Field
+                label="File URL"
+                value={form.url}
+                onChange={(e) => patch("url", e.target.value)}
+              />
+              <label className="admin-field">
+                <span>Upload file</span>
+                <input
+                  type="file"
+                  onChange={(e) => setDocFile(e.target.files?.[0] || null)}
+                />
+              </label>
+              <div className="admin-top__actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={onUploadDocument}
+                  disabled={uploading}
+                >
+                  {uploading ? "Uploading…" : "Upload file"}
+                </button>
+              </div>
+            </>
+          ) : null}
+
           <Field
-            label="Thumbnail URL"
+            label={form.type === "article" ? "Cover image URL" : "Thumbnail URL"}
             value={form.thumbnail_url}
             onChange={(e) => patch("thumbnail_url", e.target.value)}
           />
           <label className="admin-field">
-            <span>Upload thumbnail</span>
+            <span>{form.type === "article" ? "Upload cover" : "Upload thumbnail"}</span>
             <input
               type="file"
               accept="image/*"
@@ -271,10 +452,11 @@ export default function AdminMedia() {
               {uploading ? "Uploading…" : "Upload"}
             </button>
           </div>
+
           <Field
             label="Published at"
             type="date"
-            value={form.published_at}
+            value={form.published_at || ""}
             onChange={(e) => patch("published_at", e.target.value)}
           />
           <Field
@@ -293,6 +475,7 @@ export default function AdminMedia() {
               onClick={() => {
                 setForm(null);
                 setEditingId(null);
+                setPickingType(false);
               }}
             >
               Cancel
@@ -310,6 +493,8 @@ export default function AdminMedia() {
               <strong>{item.title}</strong>
               <p className="admin-top__meta">
                 {item.type}
+                {item.category ? ` · ${item.category}` : ""}
+                {item.slug ? ` · /media/${item.slug}` : ""}
                 {item.published_at ? ` · ${toDateInput(item.published_at)}` : ""}
                 {" · "}
                 {item.is_published ? "Published" : "Unpublished"}
@@ -320,11 +505,17 @@ export default function AdminMedia() {
                   className="btn btn-outline"
                   onClick={() => {
                     setEditingId(item.id);
+                    setSlugTouched(true);
+                    setPickingType(false);
                     setForm({
                       title: item.title || "",
-                      type: item.type || "video",
+                      type: item.type || "article",
+                      category: item.category || "openmindx",
+                      excerpt: item.excerpt || "",
+                      content: item.content || "",
                       url: item.url || "",
                       thumbnail_url: item.thumbnail_url || "",
+                      slug: item.slug || "",
                       published_at: toDateInput(item.published_at),
                       is_published: item.is_published !== false,
                     });

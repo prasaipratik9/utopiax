@@ -6,7 +6,8 @@
   "description": "UtopiaX Week 2 — Express API with JWT auth, CMS, and optional Supabase",
   "scripts": {
     "dev": "node --watch index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "migrate": "node src/db/migrate.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
