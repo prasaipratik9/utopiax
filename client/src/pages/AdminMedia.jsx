@@ -23,6 +23,7 @@ const EMPTY_BY_TYPE = {
     thumbnail_url: "",
     slug: "",
     is_published: true,
+    is_featured: false,
   },
   video: {
     title: "",
@@ -32,6 +33,7 @@ const EMPTY_BY_TYPE = {
     thumbnail_url: "",
     slug: "",
     is_published: true,
+    is_featured: false,
   },
   podcast: {
     title: "",
@@ -41,6 +43,7 @@ const EMPTY_BY_TYPE = {
     thumbnail_url: "",
     slug: "",
     is_published: true,
+    is_featured: false,
   },
   press: {
     title: "",
@@ -51,6 +54,7 @@ const EMPTY_BY_TYPE = {
     thumbnail_url: "",
     slug: "",
     is_published: true,
+    is_featured: false,
   },
   image: {
     title: "",
@@ -60,6 +64,7 @@ const EMPTY_BY_TYPE = {
     thumbnail_url: "",
     slug: "",
     is_published: true,
+    is_featured: false,
   },
 };
 
@@ -239,6 +244,7 @@ export default function AdminMedia() {
         slug: form.slug || slugify(form.title),
         thumbnail_url: form.thumbnail_url || null,
         is_published: Boolean(form.is_published),
+        is_featured: Boolean(form.is_featured),
         published_at: form.published_at || null,
       };
 
@@ -497,6 +503,16 @@ export default function AdminMedia() {
             value={form.is_published}
             onChange={(e) => patch("is_published", e.target.checked)}
           />
+          <Field
+            label="Featured"
+            type="checkbox"
+            value={form.is_featured}
+            onChange={(e) => patch("is_featured", e.target.checked)}
+          />
+          <p className="admin-top__meta">
+            Only one item should be marked Featured at a time. If more than one is checked, the
+            site will use whichever was published most recently.
+          </p>
           <div className="admin-top__actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? "Saving…" : "Save"}
@@ -522,7 +538,12 @@ export default function AdminMedia() {
         ) : (
           items.map((item) => (
             <div key={item.id}>
-              <strong>{item.title}</strong>
+              <strong>
+                {item.title}
+                {item.is_featured ? (
+                  <span className="admin-top__meta"> · Featured</span>
+                ) : null}
+              </strong>
               <p className="admin-top__meta">
                 {item.type}
                 {item.category ? ` · ${item.category}` : ""}
@@ -550,6 +571,7 @@ export default function AdminMedia() {
                       slug: item.slug || "",
                       published_at: toDateInput(item.published_at),
                       is_published: item.is_published !== false,
+                      is_featured: Boolean(item.is_featured),
                     });
                     setStatus("");
                     setError("");

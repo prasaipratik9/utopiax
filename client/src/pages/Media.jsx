@@ -126,10 +126,23 @@ function mapApiItem(row) {
           year: "2-digit",
         })
       : "",
+    published_at: row.published_at || null,
+    is_featured: Boolean(row.is_featured),
     category: CATEGORY_LABELS[row.category] || row.category || row.type,
     excerpt: row.excerpt || "",
     cover: row.thumbnail_url || null,
   };
+}
+
+function pickFeaturedSlotItem(filtered) {
+  const featured = filtered.filter((m) => m.is_featured);
+  if (!featured.length) return filtered[0];
+  if (featured.length === 1) return featured[0];
+  return featured.sort((a, b) => {
+    const ta = a.published_at ? new Date(a.published_at).getTime() : 0;
+    const tb = b.published_at ? new Date(b.published_at).getTime() : 0;
+    return tb - ta;
+  })[0];
 }
 
 export default function Media() {
@@ -174,7 +187,7 @@ export default function Media() {
   const bentoItems =
     filter === "all"
       ? [
-          filtered[0],
+          pickFeaturedSlotItem(filtered),
           ...externalPodcasts,
           filtered.find((m) => m.type === "audio" && !m.cover) || filtered[2],
         ].filter(Boolean)

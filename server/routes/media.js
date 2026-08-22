@@ -74,6 +74,7 @@ function parseMediaBody(body, { partial = false } = {}) {
   if (body.thumbnail_url !== undefined) out.thumbnail_url = body.thumbnail_url ?? null;
   if (body.published_at !== undefined) out.published_at = body.published_at ?? null;
   if (body.is_published !== undefined) out.is_published = Boolean(body.is_published);
+  if (body.is_featured !== undefined) out.is_featured = Boolean(body.is_featured);
   if (body.slug !== undefined) {
     out.slug = body.slug ? slugify(body.slug) : null;
   }
