@@ -12,8 +12,7 @@ import { Router } from "express";
 import { optionalAuth, requireAuth } from "../middleware/requireAuth.js";
 import { requireDb } from "../middleware/requireDb.js";
 
-const TYPES = new Set(["image", "video", "document", "article"]);
-const CATEGORIES = new Set(["openmindx", "ideationworx", "lumierex"]);
+const TYPES = new Set(["video", "article", "podcast", "press", "image"]);
 const router = Router();
 
 router.use(requireDb);
@@ -58,7 +57,7 @@ function parseMediaBody(body, { partial = false } = {}) {
     const type = String(body?.type || "").trim();
     if (!TYPES.has(type)) {
       throw Object.assign(
-        new Error("type must be one of: image, video, document, article"),
+        new Error("type must be one of: video, article, podcast, press, image"),
         { status: 400 },
       );
     }
@@ -66,14 +65,7 @@ function parseMediaBody(body, { partial = false } = {}) {
   }
 
   if (body.category !== undefined) {
-    const category = body.category ? String(body.category).trim() : null;
-    if (category && !CATEGORIES.has(category)) {
-      throw Object.assign(
-        new Error("category must be one of: openmindx, ideationworx, lumierex"),
-        { status: 400 },
-      );
-    }
-    out.category = category;
+    out.category = body.category ? String(body.category).trim() : null;
   }
 
   if (body.content !== undefined) out.content = body.content ?? null;

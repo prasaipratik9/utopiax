@@ -6,20 +6,16 @@ import { uploadToCloudinary } from "../utils/cloudinaryUpload";
 const CREATE_TYPES = [
   { id: "article", label: "Article" },
   { id: "video", label: "Video" },
-  { id: "document", label: "Document" },
-];
-
-const CATEGORIES = [
-  { value: "openmindx", label: "OpenMindX" },
-  { value: "ideationworx", label: "IdeationWorX" },
-  { value: "lumierex", label: "LumiereX" },
+  { id: "podcast", label: "Podcast" },
+  { id: "press", label: "Press" },
+  { id: "image", label: "Image" },
 ];
 
 const EMPTY_BY_TYPE = {
   article: {
     title: "",
     type: "article",
-    category: "openmindx",
+    category: "",
     excerpt: "",
     content: "",
     thumbnail_url: "",
@@ -29,16 +25,35 @@ const EMPTY_BY_TYPE = {
   video: {
     title: "",
     type: "video",
-    category: "openmindx",
+    category: "",
     url: "",
     thumbnail_url: "",
     slug: "",
     is_published: true,
   },
-  document: {
+  podcast: {
     title: "",
-    type: "document",
-    category: "openmindx",
+    type: "podcast",
+    category: "",
+    url: "",
+    thumbnail_url: "",
+    slug: "",
+    is_published: true,
+  },
+  press: {
+    title: "",
+    type: "press",
+    category: "",
+    url: "",
+    excerpt: "",
+    thumbnail_url: "",
+    slug: "",
+    is_published: true,
+  },
+  image: {
+    title: "",
+    type: "image",
+    category: "",
     url: "",
     thumbnail_url: "",
     slug: "",
@@ -110,7 +125,6 @@ export default function AdminMedia() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-  const [docFile, setDocFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
 
@@ -165,7 +179,6 @@ export default function AdminMedia() {
     setEditingId(null);
     setSlugTouched(false);
     setImageFile(null);
-    setDocFile(null);
     setForm({ ...EMPTY_BY_TYPE[type] });
     setPickingType(false);
     setStatus("");
@@ -183,26 +196,8 @@ export default function AdminMedia() {
     try {
       const url = await uploadToCloudinary(imageFile, token);
       patch("thumbnail_url", url);
+      if (form?.type === "image") patch("url", url);
       setStatus("Image uploaded");
-    } catch (err) {
-      setError(err.message || "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const onUploadDocument = async () => {
-    if (!docFile) {
-      setError("Choose a file first");
-      return;
-    }
-    setUploading(true);
-    setStatus("");
-    setError("");
-    try {
-      const url = await uploadToCloudinary(docFile, token);
-      patch("url", url);
-      setStatus("File uploaded");
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
@@ -230,11 +225,19 @@ export default function AdminMedia() {
         payload.excerpt = form.excerpt || null;
         payload.content = form.content || null;
       }
-      if (form.type === "video" || form.type === "document") {
+      if (form.type === "press") {
+        payload.excerpt = form.excerpt || null;
         payload.url = form.url || null;
       }
-      if (form.type === "image") {
-        payload.url = form.url || form.thumbnail_url || null;
+      if (
+        form.type === "video" ||
+        form.type === "podcast" ||
+        form.type === "image"
+      ) {
+        payload.url = form.url || null;
+      }
+      if (form.type === "image" && !payload.url) {
+        payload.url = form.thumbnail_url || null;
       }
 
       if (editingId) {
@@ -364,7 +367,6 @@ export default function AdminMedia() {
           <Field
             label="Category"
             value={form.category}
-            options={CATEGORIES}
             onChange={(e) => patch("category", e.target.value)}
           />
           <Field
@@ -394,39 +396,36 @@ export default function AdminMedia() {
             </>
           ) : null}
 
-          {form.type === "video" ? (
+          {form.type === "press" ? (
+            <>
+              <Field
+                label="Excerpt"
+                multiline
+                value={form.excerpt}
+                onChange={(e) => patch("excerpt", e.target.value)}
+              />
+              <Field
+                label="External URL"
+                value={form.url}
+                onChange={(e) => patch("url", e.target.value)}
+              />
+            </>
+          ) : null}
+
+          {form.type === "video" || form.type === "podcast" ? (
             <Field
-              label="Video URL"
+              label={form.type === "podcast" ? "Podcast URL" : "Video URL"}
               value={form.url}
               onChange={(e) => patch("url", e.target.value)}
             />
           ) : null}
 
-          {form.type === "document" ? (
-            <>
-              <Field
-                label="File URL"
-                value={form.url}
-                onChange={(e) => patch("url", e.target.value)}
-              />
-              <label className="admin-field">
-                <span>Upload file</span>
-                <input
-                  type="file"
-                  onChange={(e) => setDocFile(e.target.files?.[0] || null)}
-                />
-              </label>
-              <div className="admin-top__actions">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={onUploadDocument}
-                  disabled={uploading}
-                >
-                  {uploading ? "Uploading…" : "Upload file"}
-                </button>
-              </div>
-            </>
+          {form.type === "image" ? (
+            <Field
+              label="Image URL"
+              value={form.url}
+              onChange={(e) => patch("url", e.target.value)}
+            />
           ) : null}
 
           <Field
@@ -510,7 +509,7 @@ export default function AdminMedia() {
                     setForm({
                       title: item.title || "",
                       type: item.type || "article",
-                      category: item.category || "openmindx",
+                      category: item.category || "",
                       excerpt: item.excerpt || "",
                       content: item.content || "",
                       url: item.url || "",
