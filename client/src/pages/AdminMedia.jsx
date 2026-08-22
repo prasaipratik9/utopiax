@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import { useAuth } from "../context/AuthContext";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload";
 
@@ -60,6 +62,25 @@ const EMPTY_BY_TYPE = {
     is_published: true,
   },
 };
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [2, 3, false] }],
+    ["bold", "italic", "underline"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["blockquote", "link"],
+  ],
+};
+
+const QUILL_FORMATS = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "list",
+  "blockquote",
+  "link",
+];
 
 function slugify(title) {
   return String(title || "")
@@ -357,7 +378,10 @@ export default function AdminMedia() {
       {form ? (
         <form className="admin-panel" onSubmit={onSave}>
           <p className="admin-top__meta">
-            Template: <strong>{form.type}</strong>
+            Template:{" "}
+            <strong>
+              {CREATE_TYPES.find((t) => t.id === form.type)?.label || form.type}
+            </strong>
           </p>
           <Field
             label="Title"
@@ -386,13 +410,22 @@ export default function AdminMedia() {
                 value={form.excerpt}
                 onChange={(e) => patch("excerpt", e.target.value)}
               />
-              <Field
-                label="Content (HTML for now — rich text editor optional)"
-                multiline
-                type="content"
-                value={form.content}
-                onChange={(e) => patch("content", e.target.value)}
-              />
+              <label className="admin-field">
+                <span>Content</span>
+                <div
+                  onMouseDown={(e) => {
+                    if (e.target.closest(".ql-toolbar")) e.preventDefault();
+                  }}
+                >
+                  <ReactQuill
+                    theme="snow"
+                    value={form.content || ""}
+                    onChange={(html) => patch("content", html)}
+                    modules={QUILL_MODULES}
+                    formats={QUILL_FORMATS}
+                  />
+                </div>
+              </label>
             </>
           ) : null}
 
