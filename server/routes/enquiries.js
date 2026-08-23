@@ -9,7 +9,7 @@
 */
 
 import { Router } from "express";
-import { sendEnquiryNotification } from "../mailer.js";
+import { sendEnquiryConfirmation, sendEnquiryNotification } from "../mailer.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { requireDb } from "../middleware/requireDb.js";
 
@@ -50,9 +50,11 @@ router.post("/", async (req, res) => {
 
     if (error) throw error;
 
+    let adminNotified = false;
     try {
       const sent = await sendEnquiryNotification(data);
       if (sent) {
+        adminNotified = true;
         const { data: updated, error: updateError } = await req.supabase
           .from("enquiries")
           .update({ emailed: true })
@@ -63,12 +65,19 @@ router.post("/", async (req, res) => {
         if (updateError) {
           console.error("Could not mark enquiry emailed:", updateError.message);
         } else if (updated) {
-          res.status(201).json(updated);
-          return;
+          Object.assign(data, updated);
         }
       }
     } catch (mailErr) {
       console.error("Enquiry email failed:", mailErr);
+    }
+
+    if (adminNotified) {
+      try {
+        await sendEnquiryConfirmation(data);
+      } catch (confirmErr) {
+        console.error("Enquiry confirmation email failed:", confirmErr);
+      }
     }
 
     res.status(201).json(data);

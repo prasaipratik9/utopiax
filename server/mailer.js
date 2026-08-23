@@ -62,3 +62,43 @@ export async function sendEnquiryNotification(enquiry) {
 
   return true;
 }
+
+export async function sendEnquiryConfirmation(enquiry) {
+  if (!isMailConfigured()) {
+    console.warn("SMTP not configured — skipping enquiry confirmation email");
+    return false;
+  }
+
+  const mailer = getTransporter();
+  if (!mailer) return false;
+
+  const to = enquiry?.email;
+  if (!to) {
+    console.warn("Enquiry has no email — skipping confirmation email");
+    return false;
+  }
+
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
+  const name = enquiry?.name || "there";
+  const message = enquiry?.message || "";
+
+  await mailer.sendMail({
+    from,
+    to,
+    subject: "We've received your enquiry - UtopiaX",
+    text: [
+      `Hi ${name},`,
+      "",
+      "Thank you for getting in touch with UtopiaX. We've received your enquiry and someone from our team will be in touch soon.",
+      "",
+      "Here's a copy of what you sent:",
+      "",
+      message,
+      "",
+      "Warm regards,",
+      "The UtopiaX team",
+    ].join("\n"),
+  });
+
+  return true;
+}
