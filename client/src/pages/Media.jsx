@@ -220,7 +220,9 @@ export default function Media() {
   const moreJournalItems = useMemo(() => {
     if (filter !== "all") return [];
     const featured = pickFeaturedSlotItem(filtered);
-    const externalTitles = new Set(externalPodcasts.map((p) => p.title));
+    const externalTitles = new Set(
+      [...externalPodcasts, ...podcasts].map((p) => p.title),
+    );
     return filtered.filter((m) => {
       if (m.type === "article") return false;
       if (externalTitles.has(m.title)) return false;
