@@ -148,6 +148,15 @@ function pickFeaturedSlotItem(filtered) {
   })[0];
 }
 
+function resolveByTitle(apiItems, hardcodedItem) {
+  const match = apiItems.find((item) => item.title === hardcodedItem.title);
+  return match || hardcodedItem;
+}
+
+function externalHrefForItem(item) {
+  return item.url && EXTERNAL_LINK_TYPES.has(item.type) ? item.url : null;
+}
+
 export default function Media() {
   const page = useSection("media");
   const { content } = useContent();
@@ -177,21 +186,35 @@ export default function Media() {
     return seedItems;
   }, [apiItems, seedItems]);
 
+  const bentoExternalPodcasts = useMemo(
+    () => externalPodcasts.map((pod) => resolveByTitle(apiItems, pod)),
+    [apiItems],
+  );
+
+  const inspiredForImpactPods = useMemo(
+    () =>
+      podcasts.map((pod) => {
+        const match = apiItems.find((item) => item.title === pod.title);
+        return match ? { ...match, ep: pod.ep, placeholder: pod.placeholder } : pod;
+      }),
+    [apiItems],
+  );
+
   const filtered = useMemo(() => {
     const all = [...items];
-    const additions = externalPodcasts.filter(
+    const additions = bentoExternalPodcasts.filter(
       (podcast) => !all.some((item) => item.title === podcast.title),
     );
     all.splice(1, 0, ...additions);
     if (filter === "all") return all;
     return all.filter((m) => m.type === filter);
-  }, [items, filter]);
+  }, [items, filter, bentoExternalPodcasts]);
 
   const featuredPick = filter === "all" ? pickFeaturedSlotItem(filtered) : null;
 
   const bentoItems =
     filter === "all"
-      ? [featuredPick, ...externalPodcasts].filter(Boolean)
+      ? [featuredPick, ...bentoExternalPodcasts].filter(Boolean)
       : filtered.filter((m) => m.type !== "article");
 
   const moreJournalItems = useMemo(() => {
@@ -250,7 +273,12 @@ export default function Media() {
               const layout =
                 filter === "all" ? LAYOUTS[index] || "thumb" : "wide-excerpt";
               return (
-                <MediaCard key={item.title} item={item} layout={layout} />
+                <MediaCard
+                  key={item.id || item.slug || item.title}
+                  item={item}
+                  layout={layout}
+                  externalHref={externalHrefForItem(item)}
+                />
               );
             })}
           </div>
@@ -349,9 +377,7 @@ export default function Media() {
                   key={item.id || item.slug || item.title}
                   item={item}
                   layout="thumb"
-                  externalHref={
-                    item.url && EXTERNAL_LINK_TYPES.has(item.type) ? item.url : null
-                  }
+                  externalHref={externalHrefForItem(item)}
                 />
               ))}
             </div>
@@ -363,21 +389,37 @@ export default function Media() {
           <small>- the podcast, latest episodes</small>
         </div>
         <div className="media-podcasts">
-          {podcasts.map((pod) => (
-            <article className="media-pod" key={pod.ep}>
-              <figure>
-                {pod.cover ? (
-                  <img src={pod.cover} alt="" className="media-pod__cover" />
-                ) : (
-                  <ImageSlot label={pod.placeholder} />
-                )}
-              </figure>
-              <div>
-                <span>{pod.ep}</span>
-                <h4>{pod.title}</h4>
-              </div>
-            </article>
-          ))}
+          {inspiredForImpactPods.map((pod) => {
+            const externalHref = externalHrefForItem(pod);
+            const slugHref = !externalHref && pod.slug ? `/media/${pod.slug}` : null;
+            const Wrapper = externalHref ? "a" : slugHref ? Link : "article";
+            const wrapperProps = externalHref
+              ? {
+                  href: externalHref,
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                  style: { textDecoration: "none", color: "inherit" },
+                }
+              : slugHref
+                ? { to: slugHref, style: { textDecoration: "none", color: "inherit" } }
+                : {};
+
+            return (
+              <Wrapper {...wrapperProps} className="media-pod" key={pod.id || pod.ep || pod.title}>
+                <figure>
+                  {pod.cover ? (
+                    <img src={pod.cover} alt="" className="media-pod__cover" />
+                  ) : (
+                    <ImageSlot label={pod.placeholder} />
+                  )}
+                </figure>
+                <div>
+                  <span>{pod.ep}</span>
+                  <h4>{pod.title}</h4>
+                </div>
+              </Wrapper>
+            );
+          })}
         </div>
       </section>
     </div>
