@@ -165,6 +165,133 @@ a:hover {
   flex-shrink: 0;
 }
 
+@media (min-width: 901px) {
+  .nav-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body.nav-open {
+    overflow: hidden;
+  }
+
+  .site-header .header-inner {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .nav-toggle-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    margin: 0;
+    background: var(--ux-text);
+    border-radius: 2px;
+    transition:
+      transform 0.25s ease,
+      opacity 0.2s ease;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .site-header .site-nav {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    flex: unset;
+    flex-basis: 100%;
+    order: 3;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 0 clamp(24px, 5vw, 72px);
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    transform: none !important;
+    transition:
+      max-height 0.35s ease,
+      opacity 0.25s ease,
+      padding 0.25s ease;
+    z-index: auto;
+  }
+
+  .site-header .site-nav.is-open {
+    max-height: min(70vh, 520px);
+    opacity: 1;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    overflow-y: auto;
+    transform: none !important;
+  }
+
+  .site-header .site-nav .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    width: 100%;
+    padding: 0.35rem 0;
+    font-size: 14px;
+  }
+
+  .site-header .header-enquire {
+    display: none !important;
+    order: 4;
+    flex-basis: 100%;
+    align-self: stretch;
+    justify-content: center;
+    margin: 0 clamp(24px, 5vw, 72px) 20px;
+    background: #fff;
+  }
+
+  .site-header .site-nav.is-open ~ .header-enquire {
+    display: inline-flex !important;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .nav-toggle-bar,
+  .site-header .site-nav {
+    transition: none !important;
+  }
+}
+
 .btn-primary {
   background: var(--ux-red);
   color: #fff;
