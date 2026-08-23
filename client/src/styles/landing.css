@@ -2462,6 +2462,9 @@ a:hover {
 
 /* -- Media detail page -- */
 .media-detail__intro {
+  max-width: 78ch;
+  margin-left: auto;
+  margin-right: auto;
   padding-bottom: 40px;
 }
 
@@ -2532,7 +2535,9 @@ a:hover {
 }
 
 .media-detail__content {
-  max-width: 68ch;
+  max-width: 78ch;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 48px;
   overflow-wrap: break-word;
   word-break: normal;
