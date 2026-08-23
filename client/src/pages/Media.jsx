@@ -131,8 +131,11 @@ function mapApiItem(row) {
     category: CATEGORY_LABELS[row.category] || row.category || row.type,
     excerpt: row.excerpt || "",
     cover: row.thumbnail_url || null,
+    url: row.url || null,
   };
 }
+
+const EXTERNAL_LINK_TYPES = new Set(["video", "podcast", "press", "image"]);
 
 function pickFeaturedSlotItem(filtered) {
   const featured = filtered.filter((m) => m.is_featured);
@@ -184,14 +187,29 @@ export default function Media() {
     return all.filter((m) => m.type === filter);
   }, [items, filter]);
 
+  const featuredPick = filter === "all" ? pickFeaturedSlotItem(filtered) : null;
+
   const bentoItems =
     filter === "all"
-      ? [
-          pickFeaturedSlotItem(filtered),
-          ...externalPodcasts,
-          filtered.find((m) => m.type === "audio" && !m.cover) || filtered[2],
-        ].filter(Boolean)
+      ? [featuredPick, ...externalPodcasts].filter(Boolean)
       : filtered.filter((m) => m.type !== "article");
+
+  const moreJournalItems = useMemo(() => {
+    if (filter !== "all") return [];
+    const featured = pickFeaturedSlotItem(filtered);
+    const externalTitles = new Set(externalPodcasts.map((p) => p.title));
+    return filtered.filter((m) => {
+      if (m.type === "article") return false;
+      if (externalTitles.has(m.title)) return false;
+      if (
+        featured &&
+        (featured.id && m.id ? m.id === featured.id : m.title === featured.title)
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [filtered, filter]);
 
   const journalArticles = useMemo(() => {
     const fromApi = apiItems.filter((m) => m.type === "article" && m.slug);
@@ -320,6 +338,26 @@ export default function Media() {
           </div>
         )}
 
+        {filter === "all" && moreJournalItems.length > 0 ? (
+          <div className="media-journal">
+            <header className="media-journal__head">
+              <h2>More from the Journal.</h2>
+            </header>
+            <div className="media-bento">
+              {moreJournalItems.map((item) => (
+                <MediaCard
+                  key={item.id || item.slug || item.title}
+                  item={item}
+                  layout="thumb"
+                  externalHref={
+                    item.url && EXTERNAL_LINK_TYPES.has(item.type) ? item.url : null
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="media-podcast-head">
           <span>Inspired For Impact</span>
           <small>- the podcast, latest episodes</small>
@@ -346,12 +384,19 @@ export default function Media() {
   );
 }
 
-function MediaCard({ item, layout }) {
-  const href = item.slug ? `/media/${item.slug}` : null;
-  const Wrapper = href ? Link : "article";
-  const wrapperProps = href
-    ? { to: href, className: undefined, style: { textDecoration: "none", color: "inherit" } }
-    : {};
+function MediaCard({ item, layout, externalHref = null }) {
+  const slugHref = item.slug ? `/media/${item.slug}` : null;
+  const Wrapper = externalHref ? "a" : slugHref ? Link : "article";
+  const wrapperProps = externalHref
+    ? {
+        href: externalHref,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        style: { textDecoration: "none", color: "inherit" },
+      }
+    : slugHref
+      ? { to: slugHref, style: { textDecoration: "none", color: "inherit" } }
+      : {};
 
   if (item.cover && (layout === "thumb" || layout === "wide-excerpt" || layout === "audio")) {
     return (
