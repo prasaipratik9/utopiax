@@ -2460,6 +2460,106 @@ a:hover {
   }
 }
 
+/* -- Media detail page -- */
+.media-detail__intro {
+  padding-bottom: 40px;
+}
+
+.media-detail__meta {
+  margin-top: 16px;
+}
+
+.media-detail__lead {
+  max-width: 56ch;
+  margin-top: 20px !important;
+  font-size: clamp(1.05rem, 2vw, 1.2rem) !important;
+  line-height: 1.75 !important;
+  color: var(--ux-muted-2) !important;
+}
+
+.media-detail__body {
+  padding-top: 0;
+}
+
+.media-detail__hero {
+  position: relative;
+  margin: 0 0 40px;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.35);
+}
+
+.media-detail__hero-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  background: linear-gradient(135deg, #ebe7e0, #cfc8bb);
+}
+
+.media-detail__placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(220px, 36vw, 420px);
+  margin: 0 0 40px;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    radial-gradient(
+      700px 280px at 12% 0%,
+      color-mix(in srgb, var(--ux-red) 12%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(135deg, #f5f2ed 0%, #ebe7e0 48%, #e3ddd3 100%);
+}
+
+.media-detail__watermark {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 12vw, 7rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: color-mix(in srgb, var(--ux-red) 8%, transparent);
+  user-select: none;
+  pointer-events: none;
+}
+
+.media-detail__cta {
+  margin: 0 0 36px;
+}
+
+.media-detail__content {
+  max-width: 68ch;
+  margin-bottom: 48px;
+}
+
+.media-detail__content h2,
+.media-detail__content h3 {
+  font-family: var(--font-heading);
+  margin: 1.6em 0 0.6em;
+}
+
+.media-detail__related {
+  margin-top: 72px;
+}
+
+.media-detail__related-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .media-detail__related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media-detail__hero-img {
+    aspect-ratio: 16 / 10;
+  }
+}
+
 /* -- Contact page -- */
 @keyframes contact-word-in {
   from {

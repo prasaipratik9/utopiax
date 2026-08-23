@@ -7,9 +7,45 @@ const CATEGORY_LABELS = {
   lumierex: "LumiereX",
 };
 
+const CTA_LABELS = {
+  video: "Watch the video",
+  podcast: "Listen to the episode",
+  press: "Read the feature",
+  image: "View image",
+};
+
+const EXTERNAL_LINK_TYPES = new Set(["video", "podcast", "press", "image"]);
+
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "2-digit",
+  });
+}
+
+function getHeroImage(item) {
+  if (item.thumbnail_url) return item.thumbnail_url;
+  if (item.type === "image" && item.url) return item.url;
+  return null;
+}
+
+function getWatermarkLabel(item) {
+  const category = CATEGORY_LABELS[item.category] || item.category;
+  if (category) return String(category).toUpperCase();
+  if (item.type) return String(item.type).toUpperCase();
+  return "MEDIA";
+}
+
+function getCtaLabel(type) {
+  return CTA_LABELS[type] || "Open link";
+}
+
 export default function MediaDetail() {
   const { slug } = useParams();
   const [item, setItem] = useState(null);
+  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,6 +74,28 @@ export default function MediaDetail() {
       cancelled = true;
     };
   }, [slug]);
+
+  useEffect(() => {
+    if (!item?.slug) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/media");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const others = (data.items || [])
+          .filter((row) => row.slug && row.slug !== item.slug && row.is_published !== false)
+          .slice(0, 3);
+        setRelated(others);
+      } catch {
+        /* optional strip */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [item?.slug]);
 
   if (loading) {
     return (
@@ -68,59 +126,114 @@ export default function MediaDetail() {
   }
 
   const categoryLabel = CATEGORY_LABELS[item.category] || item.category;
-  const cover = item.thumbnail_url || item.url;
+  const dateLabel = formatDate(item.published_at);
+  const heroImage = getHeroImage(item);
+  const showCta =
+    Boolean(item.url) && item.type !== "article" && EXTERNAL_LINK_TYPES.has(item.type);
+  const watermark = getWatermarkLabel(item);
 
   return (
     <div className="media-landing">
-      <section className="media-hero">
+      <section className="media-hero media-detail__intro">
         <Link to="/media" className="ux-kicker">
           ← Media
         </Link>
-        {categoryLabel ? (
-          <p className="media-journal__meta" style={{ marginTop: 12 }}>
-            {String(categoryLabel).toUpperCase()}
-            {item.type ? ` · ${String(item.type).toUpperCase()}` : ""}
+        {(dateLabel || categoryLabel) && (
+          <p className="media-journal__meta media-detail__meta">
+            {dateLabel ? dateLabel.toUpperCase() : null}
+            {dateLabel && categoryLabel ? <span /> : null}
+            {categoryLabel ? String(categoryLabel).toUpperCase() : null}
           </p>
-        ) : null}
+        )}
         <h1>{item.title}</h1>
-        {item.excerpt ? <p>{item.excerpt}</p> : null}
+        {item.excerpt ? <p className="media-detail__lead">{item.excerpt}</p> : null}
       </section>
 
-      <section className="media-body">
-        {cover && item.type !== "video" ? (
-          <figure className="media-feature__media" style={{ marginBottom: 32 }}>
-            <img src={cover} alt="" className="media-feature__photo" />
+      <section className="media-body media-detail__body">
+        {heroImage ? (
+          <figure className="media-detail__hero">
+            <img src={heroImage} alt="" className="media-detail__hero-img" />
           </figure>
-        ) : null}
-
-        {item.type === "video" && item.url ? (
-          <div style={{ marginBottom: 32 }}>
-            <a href={item.url} className="btn btn-primary" target="_blank" rel="noreferrer">
-              Watch video
-            </a>
-            {item.thumbnail_url ? (
-              <figure className="media-feature__media" style={{ marginTop: 20 }}>
-                <img src={item.thumbnail_url} alt="" className="media-feature__photo" />
-              </figure>
-            ) : null}
+        ) : (
+          <div className="media-detail__placeholder" aria-hidden="true">
+            <span className="media-detail__watermark">{watermark}</span>
           </div>
-        ) : null}
+        )}
 
-        {item.type === "document" && item.url ? (
-          <p style={{ marginBottom: 32 }}>
-            <a href={item.url} className="btn btn-primary" target="_blank" rel="noreferrer">
-              Open document
+        {showCta ? (
+          <p className="media-detail__cta">
+            <a
+              href={item.url}
+              className="btn btn-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {getCtaLabel(item.type)}
             </a>
           </p>
         ) : null}
 
         {item.content ? (
           <div
-            className="media-feature__excerpt"
+            className="media-detail__content media-feature__excerpt"
             dangerouslySetInnerHTML={{ __html: item.content }}
           />
         ) : null}
+
+        {related.length > 0 ? (
+          <aside className="media-journal media-detail__related">
+            <header className="media-journal__head">
+              <span className="ux-kicker">More from the Journal</span>
+              <h2>Keep reading &amp; listening</h2>
+            </header>
+            <div className="media-bento media-detail__related-grid">
+              {related.map((row) => (
+                <RelatedCard key={row.id || row.slug} row={row} />
+              ))}
+            </div>
+          </aside>
+        ) : null}
       </section>
     </div>
+  );
+}
+
+function RelatedCard({ row }) {
+  const dateLabel = formatDate(row.published_at);
+  const categoryLabel = CATEGORY_LABELS[row.category] || row.category || row.type;
+  const cover = row.thumbnail_url || (row.type === "image" ? row.url : null);
+  const externalHref =
+    row.url && EXTERNAL_LINK_TYPES.has(row.type) ? row.url : null;
+  const slugHref = !externalHref && row.slug ? `/media/${row.slug}` : null;
+  const Wrapper = externalHref ? "a" : slugHref ? Link : "article";
+  const wrapperProps = externalHref
+    ? {
+        href: externalHref,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        style: { textDecoration: "none", color: "inherit" },
+      }
+    : slugHref
+      ? { to: slugHref, style: { textDecoration: "none", color: "inherit" } }
+      : {};
+
+  return (
+    <Wrapper {...wrapperProps} className="media-card media-card--thumb">
+      <figure>
+        {cover ? (
+          <img src={cover} alt="" className="media-card__thumb-img" />
+        ) : (
+          <div className="ux-img-slot">{row.title}</div>
+        )}
+      </figure>
+      <div className="media-card__meta">
+        <span>
+          {dateLabel}
+          {categoryLabel ? ` · ${categoryLabel}` : ""}
+        </span>
+        {externalHref ? <span className="media-card__play media-card__play--sm">▶</span> : null}
+      </div>
+      <h3>{row.title}</h3>
+    </Wrapper>
   );
 }
