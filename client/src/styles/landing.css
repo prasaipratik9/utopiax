@@ -275,7 +275,6 @@ a:hover {
     align-self: stretch;
     justify-content: center;
     margin: 0 clamp(24px, 5vw, 72px) 20px;
-    background: #fff;
   }
 
   .site-header .site-nav.is-open ~ .header-enquire {
