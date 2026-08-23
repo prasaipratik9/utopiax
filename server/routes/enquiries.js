@@ -50,42 +50,48 @@ router.post("/", async (req, res) => {
 
     if (error) throw error;
 
-    let adminNotified = false;
-    try {
-      const sent = await sendEnquiryNotification(data);
-      if (sent) {
-        adminNotified = true;
-        const { data: updated, error: updateError } = await req.supabase
-          .from("enquiries")
-          .update({ emailed: true })
-          .eq("id", data.id)
-          .select("*")
-          .maybeSingle();
-
-        if (updateError) {
-          console.error("Could not mark enquiry emailed:", updateError.message);
-        } else if (updated) {
-          Object.assign(data, updated);
-        }
-      }
-    } catch (mailErr) {
-      console.error("Enquiry email failed:", mailErr);
-    }
-
-    if (adminNotified) {
-      try {
-        await sendEnquiryConfirmation(data);
-      } catch (confirmErr) {
-        console.error("Enquiry confirmation email failed:", confirmErr);
-      }
-    }
-
+    const supabase = req.supabase;
     res.status(201).json(data);
+
+    setImmediate(() => {
+      sendEnquiryEmails(supabase, data).catch((err) => {
+        console.error("Background enquiry emails failed:", err);
+      });
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || "Could not create enquiry" });
   }
 });
+
+async function sendEnquiryEmails(supabase, enquiry) {
+  let adminNotified = false;
+
+  try {
+    const sent = await sendEnquiryNotification(enquiry);
+    if (sent) {
+      adminNotified = true;
+      const { error: updateError } = await supabase
+        .from("enquiries")
+        .update({ emailed: true })
+        .eq("id", enquiry.id);
+
+      if (updateError) {
+        console.error("Could not mark enquiry emailed:", updateError.message);
+      }
+    }
+  } catch (mailErr) {
+    console.error("Enquiry email failed:", mailErr);
+  }
+
+  if (!adminNotified) return;
+
+  try {
+    await sendEnquiryConfirmation(enquiry);
+  } catch (confirmErr) {
+    console.error("Enquiry confirmation email failed:", confirmErr);
+  }
+}
 
 router.get("/", requireAuth, async (req, res) => {
   try {
