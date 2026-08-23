@@ -2534,6 +2534,13 @@ a:hover {
 .media-detail__content {
   max-width: 68ch;
   margin-bottom: 48px;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.media-detail__content * {
+  white-space: normal !important;
+  max-width: 100%;
 }
 
 .media-detail__content h2,
