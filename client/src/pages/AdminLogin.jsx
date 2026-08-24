@@ -33,10 +33,6 @@ export default function AdminLogin() {
       <form className="admin-login" onSubmit={onSubmit}>
         <p className="ux-kicker">UtopiaX CMS</p>
         <h1>Admin login</h1>
-        <p className="admin-login__hint">
-          Week 2 starter auth. Default user: <code>admin</code> /{" "}
-          <code>utopiax-admin</code>
-        </p>
         <label>
           Username
           <input
