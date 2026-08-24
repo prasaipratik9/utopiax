@@ -1,32 +1,24 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-let transporter = null;
+const FROM = "UtopiaX <onboarding@resend.dev>";
+
+let resendClient = null;
 
 export function isMailConfigured() {
-  return Boolean(
-    process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS,
-  );
+  return Boolean(process.env.RESEND_API_KEY);
 }
 
-export function getTransporter() {
+function getResend() {
   if (!isMailConfigured()) return null;
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
   }
-  return transporter;
+  return resendClient;
 }
 
 export async function sendEnquiryNotification(enquiry) {
   if (!isMailConfigured()) {
-    console.warn("SMTP not configured — skipping enquiry email");
+    console.warn("RESEND_API_KEY not configured — skipping enquiry email");
     return false;
   }
 
@@ -36,17 +28,16 @@ export async function sendEnquiryNotification(enquiry) {
     return false;
   }
 
-  const mailer = getTransporter();
-  if (!mailer) return false;
+  const resend = getResend();
+  if (!resend) return false;
 
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
   const name = enquiry?.name || "(no name)";
   const email = enquiry?.email || "(no email)";
   const interest = enquiry?.interest || "(none)";
   const message = enquiry?.message || "";
 
-  await mailer.sendMail({
-    from,
+  const { error } = await resend.emails.send({
+    from: FROM,
     to,
     replyTo: enquiry?.email || undefined,
     subject: `UtopiaX enquiry from ${name}`,
@@ -60,17 +51,21 @@ export async function sendEnquiryNotification(enquiry) {
     ].join("\n"),
   });
 
+  if (error) {
+    throw new Error(error.message || "Resend notification failed");
+  }
+
   return true;
 }
 
 export async function sendEnquiryConfirmation(enquiry) {
   if (!isMailConfigured()) {
-    console.warn("SMTP not configured — skipping enquiry confirmation email");
+    console.warn("RESEND_API_KEY not configured — skipping enquiry confirmation email");
     return false;
   }
 
-  const mailer = getTransporter();
-  if (!mailer) return false;
+  const resend = getResend();
+  if (!resend) return false;
 
   const to = enquiry?.email;
   if (!to) {
@@ -78,12 +73,11 @@ export async function sendEnquiryConfirmation(enquiry) {
     return false;
   }
 
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
   const name = enquiry?.name || "there";
   const message = enquiry?.message || "";
 
-  await mailer.sendMail({
-    from,
+  const { error } = await resend.emails.send({
+    from: FROM,
     to,
     subject: "We've received your enquiry - UtopiaX",
     text: [
@@ -99,6 +93,10 @@ export async function sendEnquiryConfirmation(enquiry) {
       "The UtopiaX team",
     ].join("\n"),
   });
+
+  if (error) {
+    throw new Error(error.message || "Resend confirmation failed");
+  }
 
   return true;
 }
