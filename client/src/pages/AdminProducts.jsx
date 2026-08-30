@@ -289,7 +289,13 @@ export default function AdminProducts() {
                   ? "No price"
                   : `$${(Number(item.price_cents) / 100).toFixed(2)} ${item.currency || "AUD"}`}
                 {" · "}
-                {item.is_published ? "Published" : "Unpublished"}
+                <span
+                  className={`admin-status-badge${
+                    item.is_published !== false ? " is-published" : " is-draft"
+                  }`}
+                >
+                  {item.is_published !== false ? "Published" : "Draft"}
+                </span>
               </p>
               <div className="admin-top__actions">
                 <button

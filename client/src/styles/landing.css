@@ -3494,7 +3494,9 @@ a:hover {
 }
 
 .admin-sidebar__link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.72);
@@ -3543,6 +3545,11 @@ a:hover {
   margin-top: 0;
 }
 
+.admin-sidebar__icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .admin-main {
   flex: 1;
   min-width: 0;
@@ -3589,10 +3596,22 @@ a:hover {
 }
 
 .admin-list-item {
-  padding: 16px 16px 16px 20px;
-  border-left: 4px solid var(--ux-red);
-  border-radius: 0 10px 10px 0;
-  background: rgba(0, 0, 0, 0.02);
+  padding: 20px 20px 20px 24px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--ux-red);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
 .admin-list-item + .admin-list-item {
@@ -3602,6 +3621,53 @@ a:hover {
 .admin-list-item.is-unpublished {
   border-left-style: dashed;
   border-left-color: rgba(0, 0, 0, 0.18);
+}
+
+.admin-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.admin-status-badge.is-published {
+  background: color-mix(in srgb, var(--ux-red) 12%, transparent);
+  color: var(--ux-red);
+}
+
+.admin-status-badge.is-draft {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.admin-layout .btn-primary {
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--ux-red) 50%, transparent);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-layout .btn-primary:hover {
+  box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--ux-red) 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.admin-layout .btn-outline {
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-layout .btn-outline:hover {
+  background: color-mix(in srgb, var(--ux-red) 6%, #fff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .admin-login {

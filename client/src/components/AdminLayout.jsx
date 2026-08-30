@@ -2,11 +2,56 @@ import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const NAV = [
-  { to: "/admin", label: "Content", end: true },
-  { to: "/admin/services", label: "Services" },
-  { to: "/admin/products", label: "Products" },
-  { to: "/admin/media", label: "Media" },
+  { to: "/admin", label: "Content", end: true, icon: "content" },
+  // { to: "/admin/services", label: "Services" },
+  // { to: "/admin/products", label: "Products" },
+  { to: "/admin/media", label: "Media", icon: "media" },
 ];
+
+function NavIcon({ name }) {
+  if (name === "content") {
+    return (
+      <svg
+        className="admin-sidebar__icon"
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+      </svg>
+    );
+  }
+
+  if (name === "media") {
+    return (
+      <svg
+        className="admin-sidebar__icon"
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="8.5" cy="10.5" r="1.5" />
+        <path d="m21 15-5-5L5 21" />
+      </svg>
+    );
+  }
+
+  return null;
+}
 
 export default function AdminLayout({ title, description, actions, children }) {
   const { logout } = useAuth();
@@ -37,6 +82,7 @@ export default function AdminLayout({ title, description, actions, children }) {
                 `admin-sidebar__link${isActive ? " is-active" : ""}`
               }
             >
+              {item.icon ? <NavIcon name={item.icon} /> : null}
               {item.label}
             </NavLink>
           ))}

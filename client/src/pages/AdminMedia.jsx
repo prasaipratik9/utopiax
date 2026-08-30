@@ -534,7 +534,13 @@ export default function AdminMedia() {
                 {item.slug ? ` · /media/${item.slug}` : ""}
                 {item.published_at ? ` · ${toDateInput(item.published_at)}` : ""}
                 {" · "}
-                {item.is_published ? "Published" : "Unpublished"}
+                <span
+                  className={`admin-status-badge${
+                    item.is_published !== false ? " is-published" : " is-draft"
+                  }`}
+                >
+                  {item.is_published !== false ? "Published" : "Draft"}
+                </span>
               </p>
               <div className="admin-top__actions">
                 <button

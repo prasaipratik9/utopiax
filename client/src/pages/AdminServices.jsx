@@ -249,7 +249,15 @@ export default function AdminServices() {
             >
               <strong>{item.title}</strong>
               <p className="admin-top__meta">
-                {item.brand} · {item.is_published ? "Published" : "Unpublished"}
+                {item.brand}
+                {" · "}
+                <span
+                  className={`admin-status-badge${
+                    item.is_published !== false ? " is-published" : " is-draft"
+                  }`}
+                >
+                  {item.is_published !== false ? "Published" : "Draft"}
+                </span>
                 {item.slug ? ` · ${item.slug}` : ""}
               </p>
               <div className="admin-top__actions">
