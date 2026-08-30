@@ -603,6 +603,14 @@ a:hover {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ux-hero__play:hover {
+  opacity: 0.88;
+  transform: scale(1.02);
 }
 
 .ux-hero__play-btn {
@@ -629,6 +637,14 @@ a:hover {
   box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.28);
   animation: ux-float 5s ease-in-out infinite;
   z-index: 2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.ux-hero__float:hover {
+  box-shadow: 0 22px 48px -14px rgba(0, 0, 0, 0.34);
+  filter: brightness(0.97);
 }
 
 .ux-hero__float small {

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useContent, useSection } from "../context/ContentContext";
 
+const SHOWREEL_URL = "https://www.youtube.com/watch?v=1yqbuKDYorc";
+
 function ImageSlot({ label, className = "" }) {
   return (
     <div className={`ux-img-slot ${className}`.trim()} role="img" aria-label={label}>
@@ -126,17 +128,22 @@ export default function Home() {
               className="ux-hero__photo"
             />
             <div className="ux-hero__overlay" />
-            <div className="ux-hero__play">
+            <a
+              href={SHOWREEL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ux-hero__play"
+            >
               <span className="ux-hero__play-btn" aria-hidden="true">
                 ▶
               </span>
               <span>Watch the showreel</span>
-            </div>
+            </a>
           </figure>
-          <div className="ux-hero__float">
+          <Link to="/contact" className="ux-hero__float">
             <small>Now booking</small>
             <strong>2027 Keynotes &amp; Programs</strong>
-          </div>
+          </Link>
         </div>
       </section>
 
