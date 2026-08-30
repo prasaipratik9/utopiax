@@ -29,10 +29,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell admin-shell--login">
       <form className="admin-login" onSubmit={onSubmit}>
-        <p className="ux-kicker">UtopiaX CMS</p>
+        <p className="admin-login__kicker">UtopiaX CMS</p>
         <h1>Admin login</h1>
+        <p className="admin-login__lead">Sign in to manage site content.</p>
         <label>
           Username
           <input

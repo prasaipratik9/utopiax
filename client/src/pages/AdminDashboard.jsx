@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import AdminLayout from "../components/AdminLayout";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 
@@ -29,8 +30,7 @@ function Field({ label, value, onChange, multiline = false }) {
 }
 
 export default function AdminDashboard() {
-  const { isAuthenticated, loading: authLoading, user, token, logout } =
-    useAuth();
+  const { isAuthenticated, loading: authLoading, user, token } = useAuth();
   const { content, loading: contentLoading, source, saveContent, refreshContent } =
     useContent();
   const [draft, setDraft] = useState(null);
@@ -54,11 +54,23 @@ export default function AdminDashboard() {
 
   if (!ready) {
     return (
-      <div className="admin-shell">
+      <div className="admin-shell admin-shell--loading">
         <p className="admin-loading">Loading CMS…</p>
       </div>
     );
   }
+
+  const description = (
+    <>
+      Signed in as <strong>{user?.username}</strong>
+      {source ? (
+        <>
+          {" "}
+          · store: <strong>{source}</strong>
+        </>
+      ) : null}
+    </>
+  );
 
   const patch = (section, key, value) => {
     setDraft((prev) => ({
@@ -88,48 +100,20 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="admin-shell admin-shell--wide">
-      <header className="admin-top">
-        <div>
-          <p className="ux-kicker">UtopiaX CMS</p>
-          <h1>Content editor</h1>
-          <p className="admin-top__meta">
-            Signed in as <strong>{user?.username}</strong>
-            {source ? (
-              <>
-                {" "}
-                · store: <strong>{source}</strong>
-              </>
-            ) : null}
-          </p>
-        </div>
-        <div className="admin-top__actions">
-          <Link to="/admin/services" className="btn btn-outline">
-            Services
-          </Link>
-          <Link to="/admin/products" className="btn btn-outline">
-            Products
-          </Link>
-          <Link to="/admin/media" className="btn btn-outline">
-            Media
-          </Link>
-          <Link to="/" className="btn btn-outline">
-            View site
-          </Link>
-          <button type="button" className="btn btn-outline" onClick={logout}>
-            Log out
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onSave}
-            disabled={saving}
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </button>
-        </div>
-      </header>
-
+    <AdminLayout
+      title="Content editor"
+      description={description}
+      actions={
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onSave}
+          disabled={saving}
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      }
+    >
       <div className="admin-tabs" role="tablist">
         {TABS.map((t) => (
           <button
@@ -431,6 +415,6 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

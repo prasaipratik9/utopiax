@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import AdminLayout from "../components/AdminLayout";
 import { useAuth } from "../context/AuthContext";
 
 const BRANDS = ["openmindx", "ideationworx", "lumierex"];
@@ -51,8 +52,7 @@ async function api(path, token, options = {}) {
 }
 
 export default function AdminServices() {
-  const { isAuthenticated, loading: authLoading, user, token, logout } =
-    useAuth();
+  const { isAuthenticated, loading: authLoading, user, token } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
@@ -92,7 +92,7 @@ export default function AdminServices() {
 
   if (authLoading || loading) {
     return (
-      <div className="admin-shell">
+      <div className="admin-shell admin-shell--loading">
         <p className="admin-loading">Loading services…</p>
       </div>
     );
@@ -157,38 +157,14 @@ export default function AdminServices() {
   };
 
   return (
-    <div className="admin-shell admin-shell--wide">
-      <header className="admin-top">
-        <div>
-          <p className="ux-kicker">UtopiaX CMS</p>
-          <h1>Services</h1>
-          <p className="admin-top__meta">
-            Signed in as <strong>{user?.username}</strong>
-          </p>
-        </div>
-        <div className="admin-top__actions">
-          <Link to="/admin" className="btn btn-outline">
-            Content
-          </Link>
-          <Link to="/admin/products" className="btn btn-outline">
-            Products
-          </Link>
-          <Link to="/admin/media" className="btn btn-outline">
-            Media
-          </Link>
-          <Link to="/" className="btn btn-outline">
-            View site
-          </Link>
-          <button type="button" className="btn btn-outline" onClick={logout}>
-            Log out
-          </button>
-        </div>
-      </header>
-
-      {status ? <p className="admin-msg is-success">{status}</p> : null}
-      {error ? <p className="admin-msg is-error">{error}</p> : null}
-
-      <p>
+    <AdminLayout
+      title="Services"
+      description={
+        <>
+          Signed in as <strong>{user?.username}</strong>
+        </>
+      }
+      actions={
         <button
           type="button"
           className="btn btn-primary"
@@ -201,7 +177,10 @@ export default function AdminServices() {
         >
           Add new
         </button>
-      </p>
+      }
+    >
+      {status ? <p className="admin-msg is-success">{status}</p> : null}
+      {error ? <p className="admin-msg is-error">{error}</p> : null}
 
       {form ? (
         <form className="admin-panel" onSubmit={onSave}>
@@ -262,7 +241,12 @@ export default function AdminServices() {
           <p className="admin-top__meta">No services yet.</p>
         ) : (
           items.map((item) => (
-            <div key={item.id}>
+            <div
+              key={item.id}
+              className={`admin-list-item${
+                item.is_published !== false ? " is-published" : " is-unpublished"
+              }`}
+            >
               <strong>{item.title}</strong>
               <p className="admin-top__meta">
                 {item.brand} · {item.is_published ? "Published" : "Unpublished"}
@@ -300,6 +284,6 @@ export default function AdminServices() {
           ))
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
