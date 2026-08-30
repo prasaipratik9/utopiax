@@ -1,14 +1,30 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useContent, useSection } from "../context/ContentContext";
+import { useSection } from "../context/ContentContext";
 
 const PER_PAGE = 6;
 
 export default function Xperiences() {
   const page = useSection("xperiences");
-  const { content } = useContent();
-  const items = content.experiences || [];
+  const [items, setItems] = useState([]);
   const [pageNum, setPageNum] = useState(1);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/services");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setItems(data.items || []);
+      } catch {
+        /* keep empty if API unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(items.length / PER_PAGE));
   const slice = useMemo(() => {
@@ -29,7 +45,7 @@ export default function Xperiences() {
       <section className="pillar-list">
         <div className="pillar-grid">
           {slice.map((x, i) => (
-            <article className="pillar-card" key={x.title}>
+            <article className="pillar-card" key={x.id || x.slug || x.title}>
               <div className="pillar-card__meta">
                 <span className="ux-pill ux-pill--solid">
                   {(x.tag || "").toUpperCase()}
@@ -41,9 +57,9 @@ export default function Xperiences() {
               <h3>{x.title}</h3>
               <p className="pillar-card__loc">
                 {x.location}
-                {x.status ? ` · ${x.status}` : ""}
+                {x.status_label ? ` · ${x.status_label}` : ""}
               </p>
-              <p>{x.desc}</p>
+              <p>{x.description}</p>
               <Link to="/contact" className="ux-arrow">
                 Enquire <span>→</span>
               </Link>

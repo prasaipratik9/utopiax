@@ -9,6 +9,10 @@ const EMPTY = {
   title: "",
   brand: "openmindx",
   description: "",
+  tag: "",
+  location: "",
+  status_label: "",
+  cta_label: "",
   slug: "",
   is_published: true,
   sort_order: 0,
@@ -112,6 +116,10 @@ export default function AdminServices() {
         title: form.title,
         brand: form.brand,
         description: form.description,
+        tag: form.tag || null,
+        location: form.location || null,
+        status_label: form.status_label || null,
+        cta_label: form.cta_label || null,
         slug: form.slug,
         is_published: Boolean(form.is_published),
         sort_order: Number(form.sort_order) || 0,
@@ -202,6 +210,26 @@ export default function AdminServices() {
             onChange={(e) => patch("description", e.target.value)}
           />
           <Field
+            label="Tag"
+            value={form.tag}
+            onChange={(e) => patch("tag", e.target.value)}
+          />
+          <Field
+            label="Location"
+            value={form.location}
+            onChange={(e) => patch("location", e.target.value)}
+          />
+          <Field
+            label="Status label"
+            value={form.status_label}
+            onChange={(e) => patch("status_label", e.target.value)}
+          />
+          <Field
+            label="CTA label"
+            value={form.cta_label}
+            onChange={(e) => patch("cta_label", e.target.value)}
+          />
+          <Field
             label="Slug"
             value={form.slug}
             onChange={(e) => patch("slug", e.target.value)}
@@ -270,6 +298,10 @@ export default function AdminServices() {
                       title: item.title || "",
                       brand: item.brand || "openmindx",
                       description: item.description || "",
+                      tag: item.tag || "",
+                      location: item.location || "",
+                      status_label: item.status_label || "",
+                      cta_label: item.cta_label || "",
                       slug: item.slug || "",
                       is_published: item.is_published !== false,
                       sort_order: item.sort_order ?? 0,

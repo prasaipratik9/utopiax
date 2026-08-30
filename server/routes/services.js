@@ -29,6 +29,16 @@ router.get("/", optionalAuth, async (req, res) => {
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
 
+    const brand = req.query.brand ? String(req.query.brand).trim() : null;
+    if (brand) {
+      if (!BRANDS.has(brand)) {
+        return res.status(400).json({
+          error: "brand must be one of: openmindx, ideationworx, lumierex",
+        });
+      }
+      query = query.eq("brand", brand);
+    }
+
     if (!req.user) {
       query = query.eq("is_published", true);
     }
@@ -58,6 +68,10 @@ router.post("/", requireAuth, async (req, res) => {
       brand,
       description: req.body?.description ?? null,
       slug: req.body?.slug ? String(req.body.slug).trim() : null,
+      tag: req.body?.tag ?? null,
+      location: req.body?.location ?? null,
+      status_label: req.body?.status_label ?? null,
+      cta_label: req.body?.cta_label ?? null,
       is_published: req.body?.is_published !== false,
       sort_order: Number.isFinite(Number(req.body?.sort_order))
         ? Number(req.body.sort_order)
@@ -95,6 +109,12 @@ router.put("/:id", requireAuth, async (req, res) => {
       patch.brand = brand;
     }
     if (req.body?.description !== undefined) patch.description = req.body.description;
+    if (req.body?.tag !== undefined) patch.tag = req.body.tag ?? null;
+    if (req.body?.location !== undefined) patch.location = req.body.location ?? null;
+    if (req.body?.status_label !== undefined) {
+      patch.status_label = req.body.status_label ?? null;
+    }
+    if (req.body?.cta_label !== undefined) patch.cta_label = req.body.cta_label ?? null;
     if (req.body?.slug !== undefined) {
       patch.slug = req.body.slug ? String(req.body.slug).trim() : null;
     }

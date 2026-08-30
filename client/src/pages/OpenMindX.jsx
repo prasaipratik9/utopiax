@@ -1,8 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSection } from "../context/ContentContext";
 
 export default function OpenMindX() {
   const page = useSection("openmindx");
+  const [keynotes, setKeynotes] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/services?brand=openmindx");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setKeynotes(data.items || []);
+      } catch {
+        /* keep empty if API unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="pillar-landing pillar-landing--openmindx">
@@ -42,8 +61,8 @@ export default function OpenMindX() {
           <h2>{page.keynotesTitle}</h2>
         </header>
         <div className="pillar-grid">
-          {(page.keynotes || []).map((k, i) => (
-            <article className="pillar-card" key={k.title}>
+          {keynotes.map((k, i) => (
+            <article className="pillar-card" key={k.id || k.slug || k.title}>
               <div className="pillar-card__meta">
                 <span className="ux-pill ux-pill--solid">
                   {(k.tag || "").toUpperCase()}
@@ -53,7 +72,7 @@ export default function OpenMindX() {
                 </span>
               </div>
               <h3>{k.title}</h3>
-              <p>{k.desc}</p>
+              <p>{k.description}</p>
             </article>
           ))}
         </div>

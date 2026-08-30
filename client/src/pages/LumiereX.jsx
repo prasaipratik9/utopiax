@@ -1,8 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSection } from "../context/ContentContext";
 
 export default function LumiereX() {
   const page = useSection("lumierex");
+  const [retreats, setRetreats] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/services?brand=lumierex");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setRetreats(data.items || []);
+      } catch {
+        /* keep empty if API unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="pillar-landing pillar-landing--lumierex">
@@ -46,19 +65,19 @@ export default function LumiereX() {
           <h2>{page.retreatsTitle}</h2>
         </header>
         <div className="pillar-grid pillar-grid--2">
-          {(page.retreats || []).map((r) => (
-            <article className="pillar-card" key={r.title}>
+          {retreats.map((r) => (
+            <article className="pillar-card" key={r.id || r.slug || r.title}>
               <div className="pillar-card__meta">
                 <span className="ux-pill ux-pill--solid">
                   {(r.tag || "").toUpperCase()}
                 </span>
-                <span className="pillar-card__status">{r.status}</span>
+                <span className="pillar-card__status">{r.status_label}</span>
               </div>
               <h3>{r.title}</h3>
               <p className="pillar-card__loc">{r.location}</p>
-              <p>{r.desc}</p>
+              <p>{r.description}</p>
               <Link to="/contact" className="ux-arrow">
-                {r.cta || "Enquire"} <span>→</span>
+                {r.cta_label || "Enquire"} <span>→</span>
               </Link>
             </article>
           ))}

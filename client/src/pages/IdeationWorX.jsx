@@ -1,8 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSection } from "../context/ContentContext";
 
 export default function IdeationWorX() {
   const page = useSection("ideationworx");
+  const [programs, setPrograms] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/services?brand=ideationworx");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setPrograms(data.items || []);
+      } catch {
+        /* keep empty if API unavailable */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="pillar-landing pillar-landing--ideationworx">
@@ -44,10 +63,10 @@ export default function IdeationWorX() {
           <h2>{page.programsTitle}</h2>
         </header>
         <ol className="pillar-programs">
-          {(page.programs || []).map((p, i) => (
-            <li key={p}>
+          {programs.map((p, i) => (
+            <li key={p.id || p.slug || p.title}>
               <span>{String(i + 1).padStart(2, "0")}</span>
-              <p>{p}</p>
+              <p>{p.title}</p>
             </li>
           ))}
         </ol>
